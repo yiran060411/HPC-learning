@@ -1,0 +1,1330 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>并行计算可视化交互模拟</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-blue-800 mb-2">并行计算可视化交互模拟</h1>
+            <p class="text-lg text-gray-600">探索并行计算的基本原理与性能特性</p>
+        </header>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-blue-700 mb-4">你是否好奇？</h2>
+            <div class="text-lg text-gray-700 mb-4">
+                <p class="mb-2">🤔 为什么现代计算机都转向了多核设计而不是继续提高单核频率？</p>
+                <p class="mb-2">🤔 并行计算能将任务速度提高多少倍？有什么限制因素？</p>
+                <p class="mb-2">🤔 不同的并行架构（多核、集群、GPU）各有什么优缺点？</p>
+            </div>
+            <p class="text-gray-600 italic">通过下面的交互模拟，你将亲自探索这些问题的答案！</p>
+        </div>
+
+        <div class="mb-8">
+            <ul class="flex flex-wrap text-sm font-medium text-center border-b border-gray-300" id="tabs" role="tablist">
+                <li class="mr-2" role="presentation">
+                    <button class="inline-block p-4 rounded-t-lg border-b-2 border-blue-600 bg-blue-50 active" id="amdahl-tab" data-tab="amdahl-content" type="button" role="tab" aria-selected="true">阿姆达尔定律模拟</button>
+                </li>
+                <li class="mr-2" role="presentation">
+                    <button class="inline-block p-4 rounded-t-lg border-b-2 border-transparent hover:border-gray-300 hover:bg-gray-50" id="power-tab" data-tab="power-content" type="button" role="tab" aria-selected="false">功耗与多核性能</button>
+                </li>
+                <li class="mr-2" role="presentation">
+                    <button class="inline-block p-4 rounded-t-lg border-b-2 border-transparent hover:border-gray-300 hover:bg-gray-50" id="network-tab" data-tab="network-content" type="button" role="tab" aria-selected="false">互连网络模拟</button>
+                </li>
+                <li role="presentation">
+                    <button class="inline-block p-4 rounded-t-lg border-b-2 border-transparent hover:border-gray-300 hover:bg-gray-50" id="architecture-tab" data-tab="architecture-content" type="button" role="tab" aria-selected="false">并行架构比较</button>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 阿姆达尔定律模拟 -->
+        <div id="amdahl-content" class="tab-content bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-blue-700 mb-4">阿姆达尔定律：并行计算的理论加速比</h2>
+            <p class="text-gray-700 mb-6">阿姆达尔定律描述了程序并行化后的理论加速比。它表明，程序中的串行部分将成为限制整体性能提升的瓶颈。</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold mb-3">调整参数</h3>
+                    <div class="mb-4">
+                        <label for="parallel-portion" class="block text-sm font-medium text-gray-700 mb-1">可并行化部分比例 (p):</label>
+                        <input type="range" id="parallel-portion" min="0" max="1" step="0.01" value="0.95" class="w-full h-2 bg-blue-100 rounded-lg appearance-none cursor-pointer">
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span>0% (全串行)</span>
+                            <span id="parallel-value">95%</span>
+                            <span>100% (全并行)</span>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="core-count" class="block text-sm font-medium text-gray-700 mb-1">处理器核心数 (n):</label>
+                        <input type="range" id="core-count" min="1" max="1024" step="1" value="8" class="w-full h-2 bg-blue-100 rounded-lg appearance-none cursor-pointer">
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span>1</span>
+                            <span id="core-value">8</span>
+                            <span>1024</span>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-blue-50 rounded-lg">
+                        <h4 class="font-semibold mb-2">计算结果</h4>
+                        <p class="mb-1">理论加速比: <span id="speedup-value" class="font-bold">4.71</span>倍</p>
+                        <p class="mb-1">并行效率: <span id="efficiency-value" class="font-bold">58.82%</span></p>
+                        <p class="text-xs text-gray-500 mt-2">加速比 = 1 / ((1-p) + p/n)</p>
+                        <p class="text-xs text-gray-500">并行效率 = 加速比 / n × 100%</p>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-3">加速比与核心数关系</h3>
+                    <div class="bg-white p-2 rounded-lg border border-gray-200" style="height: 300px;">
+                        <canvas id="amdahl-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-yellow-50 p-4 rounded-lg mb-6">
+                <h3 class="text-lg font-semibold text-yellow-800 mb-2">探索发现</h3>
+                <ul class="list-disc pl-5 text-gray-700">
+                    <li>尝试将可并行化比例设为90%，然后增加核心数到32、64、128。观察加速比的变化趋势，你会发现什么？</li>
+                    <li>当可并行化比例为99%时，需要多少核心才能达到接近10倍的加速比？</li>
+                    <li>为什么即使有1024个核心，如果程序中有5%的部分无法并行化，最大加速比仍然不到20倍？</li>
+                </ul>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold mb-3">阿姆达尔定律的启示</h3>
+                <p class="text-gray-700 mb-2">阿姆达尔定律告诉我们：</p>
+                <ul class="list-disc pl-5 text-gray-700 mb-4">
+                    <li>程序中的串行部分是限制并行性能的关键瓶颈</li>
+                    <li>仅仅增加处理器数量并不能无限提高性能</li>
+                    <li>在设计并行算法时，应优先减少串行部分的比例</li>
+                </ul>
+                <p class="text-gray-700">这就是为什么现代超级计算机虽然有数十万个核心，但对于特定应用的加速比可能远低于理论值。</p>
+            </div>
+        </div>
+
+        <!-- 功耗与多核性能模拟 -->
+        <div id="power-content" class="tab-content hidden bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-blue-700 mb-4">功耗墙：为什么转向多核设计</h2>
+            <p class="text-gray-700 mb-6">现代处理器设计面临的最大挑战之一是功耗墙。功耗与电压的平方和频率成正比：P ∝ V² × f。而频率又与电压成正比，因此功耗与频率的三次方成正比：P ∝ f³。</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold mb-3">调整参数</h3>
+                    <div class="mb-4">
+                        <label for="frequency-change" class="block text-sm font-medium text-gray-700 mb-1">频率变化比例:</label>
+                        <input type="range" id="frequency-change" min="0.5" max="2.0" step="0.05" value="1.0" class="w-full h-2 bg-blue-100 rounded-lg appearance-none cursor-pointer">
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span>0.5x</span>
+                            <span id="frequency-value">1.0x</span>
+                            <span>2.0x</span>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="core-number" class="block text-sm font-medium text-gray-700 mb-1">核心数量:</label>
+                        <input type="range" id="core-number" min="1" max="16" step="1" value="1" class="w-full h-2 bg-blue-100 rounded-lg appearance-none cursor-pointer">
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span>1</span>
+                            <span id="core-number-value">1</span>
+                            <span>16</span>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-blue-50 rounded-lg">
+                        <h4 class="font-semibold mb-2">计算结果</h4>
+                        <p class="mb-1">性能比例: <span id="performance-ratio" class="font-bold">1.0</span>x</p>
+                        <p class="mb-1">功耗比例: <span id="power-ratio" class="font-bold">1.0</span>x</p>
+                        <p class="mb-1">能效比例: <span id="efficiency-ratio" class="font-bold">1.0</span>x</p>
+                        <p class="text-xs text-gray-500 mt-2">性能 ≈ 核心数 × 频率</p>
+                        <p class="text-xs text-gray-500">功耗 ∝ 核心数 × 频率³</p>
+                        <p class="text-xs text-gray-500">能效 = 性能 / 功耗</p>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-3">功耗与性能关系</h3>
+                    <div class="bg-white p-2 rounded-lg border border-gray-200" style="height: 300px;">
+                        <canvas id="power-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-yellow-50 p-4 rounded-lg mb-6">
+                <h3 class="text-lg font-semibold text-yellow-800 mb-2">探索发现</h3>
+                <ul class="list-disc pl-5 text-gray-700">
+                    <li>尝试将频率提高到1.5倍，观察功耗的变化。为什么功耗增加如此之快？</li>
+                    <li>比较以下两种方案的性能和功耗：(1)单核心频率提高到2倍；(2)保持原频率但使用4个核心</li>
+                    <li>找出在保持相同功耗的情况下，能获得最大性能的核心数和频率组合</li>
+                </ul>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold mb-3">功耗墙的启示</h3>
+                <p class="text-gray-700 mb-2">功耗墙告诉我们：</p>
+                <ul class="list-disc pl-5 text-gray-700 mb-4">
+                    <li>单纯提高频率会导致功耗呈立方增长，很快就会达到散热极限</li>
+                    <li>使用多个较低频率的核心可以在相同功耗下提供更高的总体性能</li>
+                    <li>这就是为什么从2005年左右开始，处理器设计从追求更高频率转向了多核设计</li>
+                </ul>
+                <p class="text-gray-700">这一趋势迫使软件开发人员必须学习并行编程技术，以充分利用现代处理器的多核能力。</p>
+            </div>
+        </div>
+
+        <!-- 互连网络模拟 -->
+        <div id="network-content" class="tab-content hidden bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-blue-700 mb-4">互连网络：并行计算的通信骨架</h2>
+            <p class="text-gray-700 mb-6">互连网络是并行计算系统中的关键组件，它决定了处理器之间如何通信。不同的网络拓扑结构有不同的特性，适用于不同类型的计算任务。</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold mb-3">网络拓扑选择</h3>
+                    <div class="mb-4">
+                        <label for="topology-select" class="block text-sm font-medium text-gray-700 mb-1">选择网络拓扑:</label>
+                        <select id="topology-select" class="w-full p-2 border border-gray-300 rounded-md">
+                            <option value="fully-connected">完全连接网络</option>
+                            <option value="mesh">网格拓扑</option>
+                            <option value="ring">环形拓扑</option>
+                            <option value="star">星形拓扑</option>
+                            <option value="tree">树形拓扑</option>
+                            <option value="dragonfly">蜻蜓拓扑</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label for="node-count" class="block text-sm font-medium text-gray-700 mb-1">节点数量:</label>
+                        <input type="range" id="node-count" min="4" max="16" step="1" value="8" class="w-full h-2 bg-blue-100 rounded-lg appearance-none cursor-pointer">
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span>4</span>
+                            <span id="node-count-value">8</span>
+                            <span>16</span>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-blue-50 rounded-lg">
+                        <h4 class="font-semibold mb-2">网络特性</h4>
+                        <p class="mb-1">直径(最大跳数): <span id="network-diameter" class="font-bold">1</span></p>
+                        <p class="mb-1">平均跳数: <span id="avg-hops" class="font-bold">1.00</span></p>
+                        <p class="mb-1">链接总数: <span id="link-count" class="font-bold">28</span></p>
+                        <p class="mb-1">节点平均度: <span id="avg-degree" class="font-bold">7.00</span></p>
+                        <p class="text-xs text-gray-500 mt-2">直径：任意两节点间的最大距离</p>
+                        <p class="text-xs text-gray-500">节点度：每个节点的连接数</p>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-3">网络拓扑可视化</h3>
+                    <div id="network-visualization" class="bg-white p-2 rounded-lg border border-gray-200" style="height: 300px;">
+                        <!-- 网络可视化将在这里渲染 -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-yellow-50 p-4 rounded-lg mb-6">
+                <h3 class="text-lg font-semibold text-yellow-800 mb-2">探索发现</h3>
+                <ul class="list-disc pl-5 text-gray-700">
+                    <li>比较完全连接网络和环形拓扑的直径和链接数。为什么超大规模系统不使用完全连接？</li>
+                    <li>蜻蜓拓扑是现代超级计算机常用的网络结构，它如何平衡了性能和成本？</li>
+                    <li>不同的应用程序对网络特性有不同的需求。思考哪种拓扑结构适合数据密集型应用？哪种适合计算密集型应用？</li>
+                </ul>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold mb-3">互连网络的重要性</h3>
+                <p class="text-gray-700 mb-2">互连网络对并行计算性能的影响：</p>
+                <ul class="list-disc pl-5 text-gray-700 mb-4">
+                    <li>网络延迟直接影响进程间通信的速度</li>
+                    <li>网络带宽决定了数据传输的吞吐量</li>
+                    <li>网络拓扑影响了系统的可扩展性和容错性</li>
+                    <li>不同的并行算法对网络特性有不同的敏感度</li>
+                </ul>
+                <p class="text-gray-700">在设计大规模并行系统时，互连网络的选择往往是性能、成本和功耗之间的权衡。</p>
+            </div>
+        </div>
+
+        <!-- 并行架构比较 -->
+        <div id="architecture-content" class="tab-content hidden bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-blue-700 mb-4">并行架构比较：多核、集群与GPU</h2>
+            <p class="text-gray-700 mb-6">现代并行计算系统主要有三种架构：多核共享内存系统、分布式内存集群和GPU加速器。每种架构都有其独特的特点和适用场景。</p>
+            
+            <div class="overflow-x-auto mb-6">
+                <table class="min-w-full bg-white border border-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-sm font-semibold text-gray-700">特性</th>
+                            <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-sm font-semibold text-gray-700">多核共享内存</th>
+                            <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-sm font-semibold text-gray-700">分布式内存集群</th>
+                            <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-sm font-semibold text-gray-700">GPU加速器</th>
+                        </tr>
+                    </thead>
+                    <tbody id="architecture-table">
+                        <tr>
+                            <td class="py-2 px-4 border-b border-gray-200 text-sm">内存访问</td>
+                            <td class="py-2 px-4 border-b border-gray-200 text-sm">统一共享内存，直接访问</td>
+                            <td class="py-2 px-4 border-b border-gray-200 text-sm">分布式内存，需消息传递</td>
+                            <td class="py-2 px-4 border-b border-gray-200 text-sm">设备内存，需主机传输</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2 px-4 border-b border-gray-200 text-sm">编程模型</td>
+                            <td class="py-2 px-4 border-b border-gray-200 text-sm">OpenMP，线程库</td>
+                            <td class="py-2 px-4 border-b border-gray-200 text-sm">MPI，消息传递</td>
+                            <td class="py-2 px-4 border-b border-gray-200 text-sm">CUDA，OpenCL</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2 px-4 border-b border-gray-200 text-sm">规模</td>
+                            <td class="py-2 px-4 border-b border-gray-200 text-sm">小型（数十核）</td>
+                            <td class="py-2 px-4 border-b border-gray-200 text-sm">大型（数千至数百万核）</td>
+                            <td class="py-2 px-4 border-b border-gray-200 text-sm">中型（数千至数万核）</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2 px-4 border-b border-gray-200 text-sm">通信开销</td>
+                            <td class="py-2 px-4 border-b border-gray-200 text-sm">低</td>
+                            <td class="py-2 px-4 border-b border-gray-200 text-sm">高</td>
+                            <td class="py-2 px-4 border-b border-gray-200 text-sm">中</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2 px-4 border-b border-gray-200 text-sm">编程复杂度</td>
+                            <td class="py-2 px-4 border-b border-gray-200 text-sm">低</td>
+                            <td class="py-2 px-4 border-b border-gray-200 text-sm">高</td>
+                            <td class="py-2 px-4 border-b border-gray-200 text-sm">中高</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2 px-4 border-b border-gray-200 text-sm">适用场景</td>
+                            <td class="py-2 px-4 border-b border-gray-200 text-sm">通用计算，中小规模问题</td>
+                            <td class="py-2 px-4 border-b border-gray-200 text-sm">大规模科学计算，分布式应用</td>
+                            <td class="py-2 px-4 border-b border-gray-200 text-sm">数据并行，机器学习，图形处理</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <h3 class="text-lg font-semibold mb-3">架构性能比较</h3>
+                    <div class="bg-white p-2 rounded-lg border border-gray-200" style="height: 300px;">
+                        <canvas id="architecture-chart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold mb-3">应用场景选择</h3>
+                    <div class="mb-4">
+                        <label for="application-select" class="block text-sm font-medium text-gray-700 mb-1">选择应用场景:</label>
+                        <select id="application-select" class="w-full p-2 border border-gray-300 rounded-md">
+                            <option value="general">通用计算任务</option>
+                            <option value="data-parallel">数据并行处理</option>
+                            <option value="ml">机器学习训练</option>
+                            <option value="hpc">高性能科学计算</option>
+                            <option value="graph">图形渲染</option>
+                        </select>
+                    </div>
+                    <div class="p-4 bg-blue-50 rounded-lg">
+                        <h4 class="font-semibold mb-2">推荐架构</h4>
+                        <div id="architecture-recommendation">
+                            <p class="mb-1"><span class="font-bold">最佳选择:</span> 多核共享内存</p>
+                            <p class="mb-1"><span class="font-bold">次佳选择:</span> 分布式内存集群</p>
+                            <p class="mb-3"><span class="font-bold">适用度:</span> 中等</p>
+                            <p class="text-sm text-gray-700">通用计算任务通常不需要特别高的并行度，多核系统编程简单且通信开销低，是最佳选择。如果问题规模较大，可考虑使用集群。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-yellow-50 p-4 rounded-lg mb-6">
+                <h3 class="text-lg font-semibold text-yellow-800 mb-2">探索发现</h3>
+                <ul class="list-disc pl-5 text-gray-700">
+                    <li>尝试不同的应用场景，观察推荐架构的变化。思考为什么某些应用更适合特定架构？</li>
+                    <li>现代超级计算机通常结合了这三种架构的特点，形成异构计算系统。这样做有什么优势？</li>
+                    <li>考虑你熟悉的一个计算问题，它最适合在哪种架构上运行？为什么？</li>
+                </ul>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold mb-3">并行架构的发展趋势</h3>
+                <p class="text-gray-700 mb-2">现代并行计算系统的发展趋势：</p>
+                <ul class="list-disc pl-5 text-gray-700 mb-4">
+                    <li>异构计算：结合CPU、GPU和专用加速器的优势</li>
+                    <li>领域特定架构：为特定应用领域（如AI）优化的处理器</li>
+                    <li>近内存计算：减少数据移动，提高能效</li>
+                    <li>可扩展互连：支持从小型系统到超大规模系统的无缝扩展</li>
+                </ul>
+                <p class="text-gray-700">未来的并行计算系统将更加注重能效、可扩展性和特定领域的性能优化。</p>
+            </div>
+        </div>
+
+        <div class="bg-blue-50 rounded-lg shadow p-6 mb-8">
+            <h2 class="text-xl font-bold text-blue-800 mb-4">总结与思考</h2>
+            <p class="text-gray-700 mb-4">通过这个交互式模拟，我们探索了并行计算的几个核心概念：</p>
+            <ul class="list-disc pl-5 text-gray-700 mb-4">
+                <li>阿姆达尔定律揭示了并行计算的理论加速极限和串行部分的瓶颈效应</li>
+                <li>功耗墙解释了为什么现代处理器设计从追求更高频率转向了多核设计</li>
+                <li>互连网络是大规模并行系统的关键组件，不同拓扑结构有不同的特性</li>
+                <li>不同的并行架构（多核、集群、GPU）各有优缺点，适用于不同的应用场景</li>
+            </ul>
+            <p class="text-gray-700">并行计算已成为现代计算机科学的基础，理解这些概念对于设计高效的并行算法和系统至关重要。</p>
+        </div>
+
+        <footer class="text-center text-gray-500 text-sm mt-8">
+            <p>并行计算可视化交互模拟 | 基于并行计算基础课程内容开发</p>
+        </footer>
+    </div>
+
+    <script>
+        // 全局变量和工具函数
+        let amdahlChart = null;
+        let powerChart = null;
+        let architectureChart = null;
+        
+        // 防止错误的辅助函数
+        function safeParseFloat(value, defaultValue = 0) {
+            try {
+                const parsed = parseFloat(value);
+                return isNaN(parsed) ? defaultValue : parsed;
+            } catch (error) {
+                console.error("Error parsing float:", error);
+                return defaultValue;
+            }
+        }
+        
+        // 初始化标签页切换功能
+        function initTabs() {
+            try {
+                const tabButtons = document.querySelectorAll("#tabs button");
+                const tabContents = document.querySelectorAll(".tab-content");
+                
+                tabButtons.forEach(button => {
+                    button.addEventListener("click", () => {
+                        const tabId = button.getAttribute("data-tab");
+                        
+                        // 隐藏所有内容并移除活动状态
+                        tabContents.forEach(content => {
+                            content.classList.add("hidden");
+                        });
+                        
+                        tabButtons.forEach(btn => {
+                            btn.classList.remove("border-blue-600", "bg-blue-50");
+                            btn.classList.add("border-transparent");
+                            btn.setAttribute("aria-selected", "false");
+                        });
+                        
+                        // 显示选中的内容并添加活动状态
+                        document.getElementById(tabId).classList.remove("hidden");
+                        button.classList.remove("border-transparent");
+                        button.classList.add("border-blue-600", "bg-blue-50");
+                        button.setAttribute("aria-selected", "true");
+                        
+                        // 如果切换到包含图表的标签，重新渲染图表
+                        setTimeout(() => {
+                            if (tabId === "amdahl-content" && amdahlChart) {
+                                updateAmdahlChart();
+                            } else if (tabId === "power-content" && powerChart) {
+                                updatePowerChart();
+                            } else if (tabId === "architecture-content" && architectureChart) {
+                                updateArchitectureChart();
+                            } else if (tabId === "network-content") {
+                                updateNetworkVisualization();
+                            }
+                        }, 100);
+                    });
+                });
+            } catch (error) {
+                console.error("Error initializing tabs:", error);
+            }
+        }
+
+        // 阿姆达尔定律模拟
+        function initAmdahlSimulation() {
+            try {
+                const parallelPortionInput = document.getElementById("parallel-portion");
+                const coreCountInput = document.getElementById("core-count");
+                const parallelValueSpan = document.getElementById("parallel-value");
+                const coreValueSpan = document.getElementById("core-value");
+                const speedupValueSpan = document.getElementById("speedup-value");
+                const efficiencyValueSpan = document.getElementById("efficiency-value");
+                
+                // 初始化图表
+                const ctx = document.getElementById("amdahl-chart").getContext("2d");
+                amdahlChart = new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: "理论加速比",
+                            data: [],
+                            borderColor: "rgb(59, 130, 246)",
+                            backgroundColor: "rgba(59, 130, 246, 0.1)",
+                            tension: 0.1,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        aspectRatio: 1.8,
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: "处理器核心数"
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: "加速比"
+                                },
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+                
+                // 更新函数
+                function updateAmdahlValues() {
+                    try {
+                        const p = safeParseFloat(parallelPortionInput.value, 0.95);
+                        const n = safeParseFloat(coreCountInput.value, 8);
+                        
+                        // 更新显示值
+                        parallelValueSpan.textContent = `${(p * 100).toFixed(0)}%`;
+                        coreValueSpan.textContent = n.toString();
+                        
+                        // 计算加速比
+                        const speedup = 1 / ((1 - p) + p / n);
+                        const efficiency = (speedup / n) * 100;
+                        
+                        speedupValueSpan.textContent = speedup.toFixed(2);
+                        efficiencyValueSpan.textContent = `${efficiency.toFixed(2)}%`;
+                        
+                        updateAmdahlChart();
+                    } catch (error) {
+                        console.error("Error updating Amdahl values:", error);
+                    }
+                }
+                
+                // 更新图表
+                function updateAmdahlChart() {
+                    try {
+                        const p = safeParseFloat(parallelPortionInput.value, 0.95);
+                        const currentN = safeParseFloat(coreCountInput.value, 8);
+                        
+                        // 生成数据点
+                        const labels = [];
+                        const data = [];
+                        
+                        // 根据当前核心数动态调整图表范围
+                        const maxN = Math.max(32, currentN * 2);
+                        const step = Math.max(1, Math.floor(maxN / 16));
+                        
+                        for (let n = 1; n <= maxN; n += step) {
+                            labels.push(n);
+                            const speedup = 1 / ((1 - p) + p / n);
+                            data.push(speedup);
+                        }
+                        
+                        // 添加当前选中的点
+                        if (!labels.includes(currentN)) {
+                            const insertIndex = labels.findIndex(n => n > currentN);
+                            if (insertIndex !== -1) {
+                                labels.splice(insertIndex, 0, currentN);
+                                const speedup = 1 / ((1 - p) + p / currentN);
+                                data.splice(insertIndex, 0, speedup);
+                            }
+                        }
+                        
+                        // 更新图表
+                        amdahlChart.data.labels = labels;
+                        amdahlChart.data.datasets[0].data = data;
+                        amdahlChart.update();
+                    } catch (error) {
+                        console.error("Error updating Amdahl chart:", error);
+                    }
+                }
+                
+                // 添加事件监听器
+                parallelPortionInput.addEventListener("input", updateAmdahlValues);
+                coreCountInput.addEventListener("input", updateAmdahlValues);
+                
+                // 初始更新
+                updateAmdahlValues();
+                
+                // 导出更新函数
+                window.updateAmdahlChart = updateAmdahlChart;
+            } catch (error) {
+                console.error("Error initializing Amdahl simulation:", error);
+            }
+        }
+
+        // 功耗与多核性能模拟
+        function initPowerSimulation() {
+            try {
+                const frequencyInput = document.getElementById("frequency-change");
+                const coreNumberInput = document.getElementById("core-number");
+                const frequencyValueSpan = document.getElementById("frequency-value");
+                const coreNumberValueSpan = document.getElementById("core-number-value");
+                const performanceRatioSpan = document.getElementById("performance-ratio");
+                const powerRatioSpan = document.getElementById("power-ratio");
+                const efficiencyRatioSpan = document.getElementById("efficiency-ratio");
+                
+                // 初始化图表
+                const ctx = document.getElementById("power-chart").getContext("2d");
+                powerChart = new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: ["性能", "功耗", "能效"],
+                        datasets: [{
+                            label: "相对基准值的比例",
+                            data: [1, 1, 1],
+                            backgroundColor: [
+                                "rgba(59, 130, 246, 0.6)",
+                                "rgba(239, 68, 68, 0.6)",
+                                "rgba(16, 185, 129, 0.6)"
+                            ],
+                            borderColor: [
+                                "rgb(59, 130, 246)",
+                                "rgb(239, 68, 68)",
+                                "rgb(16, 185, 129)"
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        aspectRatio: 1.8,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: "相对比例"
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // 更新函数
+                function updatePowerValues() {
+                    try {
+                        const frequencyRatio = safeParseFloat(frequencyInput.value, 1.0);
+                        const coreNumber = safeParseFloat(coreNumberInput.value, 1);
+                        
+                        // 更新显示值
+                        frequencyValueSpan.textContent = `${frequencyRatio.toFixed(2)}x`;
+                        coreNumberValueSpan.textContent = coreNumber.toString();
+                        
+                        // 计算性能和功耗比例
+                        const performanceRatio = coreNumber * frequencyRatio;
+                        const powerRatio = coreNumber * Math.pow(frequencyRatio, 3);
+                        const efficiencyRatio = performanceRatio / powerRatio;
+                        
+                        performanceRatioSpan.textContent = performanceRatio.toFixed(2);
+                        powerRatioSpan.textContent = powerRatio.toFixed(2);
+                        efficiencyRatioSpan.textContent = efficiencyRatio.toFixed(2);
+                        
+                        updatePowerChart(performanceRatio, powerRatio, efficiencyRatio);
+                    } catch (error) {
+                        console.error("Error updating power values:", error);
+                    }
+                }
+                
+                // 更新图表
+                function updatePowerChart(performance, power, efficiency) {
+                    try {
+                        powerChart.data.datasets[0].data = [performance, power, efficiency];
+                        powerChart.update();
+                    } catch (error) {
+                        console.error("Error updating power chart:", error);
+                    }
+                }
+                
+                // 添加事件监听器
+                frequencyInput.addEventListener("input", updatePowerValues);
+                coreNumberInput.addEventListener("input", updatePowerValues);
+                
+                // 初始更新
+                updatePowerValues();
+                
+                // 导出更新函数
+                window.updatePowerChart = function() {
+                    updatePowerValues();
+                };
+            } catch (error) {
+                console.error("Error initializing power simulation:", error);
+            }
+        }
+
+        // 互连网络模拟
+        function initNetworkSimulation() {
+            try {
+                const topologySelect = document.getElementById("topology-select");
+                const nodeCountInput = document.getElementById("node-count");
+                const nodeCountValueSpan = document.getElementById("node-count-value");
+                const networkDiameterSpan = document.getElementById("network-diameter");
+                const avgHopsSpan = document.getElementById("avg-hops");
+                const linkCountSpan = document.getElementById("link-count");
+                const avgDegreeSpan = document.getElementById("avg-degree");
+                const networkVisualization = document.getElementById("network-visualization");
+                
+                // 网络特性计算函数
+                function calculateNetworkProperties(topology, nodeCount) {
+                    try {
+                        let diameter = 0;
+                        let avgHops = 0;
+                        let linkCount = 0;
+                        let avgDegree = 0;
+                        
+                        switch (topology) {
+                            case "fully-connected":
+                                diameter = 1;
+                                avgHops = 1;
+                                linkCount = (nodeCount * (nodeCount - 1)) / 2;
+                                avgDegree = nodeCount - 1;
+                                break;
+                            case "mesh":
+                                // 假设2D网格，近似值
+                                const side = Math.ceil(Math.sqrt(nodeCount));
+                                diameter = 2 * (side - 1);
+                                avgHops = 2 * (side - 1) / 3;
+                                linkCount = 2 * nodeCount - 2 * Math.sqrt(nodeCount);
+                                avgDegree = 4 - (4 / side);
+                                break;
+                            case "ring":
+                                diameter = Math.floor(nodeCount / 2);
+                                avgHops = nodeCount / 4;
+                                linkCount = nodeCount;
+                                avgDegree = 2;
+                                break;
+                            case "star":
+                                diameter = 2;
+                                avgHops = 1.5 + (1 / (2 * nodeCount));
+                                linkCount = nodeCount - 1;
+                                avgDegree = 2 - (2 / nodeCount);
+                                break;
+                            case "tree":
+                                // 假设二叉树
+                                diameter = 2 * Math.floor(Math.log2(nodeCount));
+                                avgHops = Math.log2(nodeCount);
+                                linkCount = nodeCount - 1;
+                                avgDegree = 2 - (2 / nodeCount);
+                                break;
+                            case "dragonfly":
+                                // 蜻蜓拓扑的简化模型
+                                diameter = 3;
+                                avgHops = 2;
+                                const groupSize = Math.ceil(Math.sqrt(nodeCount));
+                                const groupCount = Math.ceil(nodeCount / groupSize);
+                                linkCount = (nodeCount * (groupSize - 1)) / 2 + groupCount * (groupCount - 1) / 2;
+                                avgDegree = (linkCount * 2) / nodeCount;
+                                break;
+                        }
+                        
+                        return {
+                            diameter: Math.round(diameter),
+                            avgHops: avgHops.toFixed(2),
+                            linkCount: Math.round(linkCount),
+                            avgDegree: avgDegree.toFixed(2)
+                        };
+                    } catch (error) {
+                        console.error("Error calculating network properties:", error);
+                        return { diameter: 0, avgHops: "0.00", linkCount: 0, avgDegree: "0.00" };
+                    }
+                }
+                
+                // 更新网络可视化
+                function updateNetworkVisualization() {
+                    try {
+                        const topology = topologySelect.value;
+                        const nodeCount = parseInt(nodeCountInput.value);
+                        
+                        // 更新显示值
+                        nodeCountValueSpan.textContent = nodeCount.toString();
+                        
+                        // 计算网络特性
+                        const properties = calculateNetworkProperties(topology, nodeCount);
+                        networkDiameterSpan.textContent = properties.diameter;
+                        avgHopsSpan.textContent = properties.avgHops;
+                        linkCountSpan.textContent = properties.linkCount;
+                        avgDegreeSpan.textContent = properties.avgDegree;
+                        
+                        // 生成网络可视化SVG
+                        let svgContent = '';
+                        
+                        switch (topology) {
+                            case "fully-connected":
+                                svgContent = generateFullyConnectedSVG(nodeCount);
+                                break;
+                            case "mesh":
+                                svgContent = generateMeshSVG(nodeCount);
+                                break;
+                            case "ring":
+                                svgContent = generateRingSVG(nodeCount);
+                                break;
+                            case "star":
+                                svgContent = generateStarSVG(nodeCount);
+                                break;
+                            case "tree":
+                                svgContent = generateTreeSVG(nodeCount);
+                                break;
+                            case "dragonfly":
+                                svgContent = generateDragonflySVG(nodeCount);
+                                break;
+                        }
+                        
+                        networkVisualization.innerHTML = svgContent;
+                    } catch (error) {
+                        console.error("Error updating network visualization:", error);
+                    }
+                }
+                
+                // 生成完全连接网络SVG
+                function generateFullyConnectedSVG(nodeCount) {
+                    try {
+                        const width = 300;
+                        const height = 300;
+                        const radius = 100;
+                        const centerX = width / 2;
+                        const centerY = height / 2;
+                        
+                        let svg = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`;
+                        
+                        // 添加连接线
+                        for (let i = 0; i < nodeCount; i++) {
+                            const angle1 = (i / nodeCount) * 2 * Math.PI;
+                            const x1 = centerX + radius * Math.cos(angle1);
+                            const y1 = centerY + radius * Math.sin(angle1);
+                            
+                            for (let j = i + 1; j < nodeCount; j++) {
+                                const angle2 = (j / nodeCount) * 2 * Math.PI;
+                                const x2 = centerX + radius * Math.cos(angle2);
+                                const y2 = centerY + radius * Math.sin(angle2);
+                                
+                                svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#9CA3AF" stroke-width="1" />`;
+                            }
+                        }
+                        
+                        // 添加节点
+                        for (let i = 0; i < nodeCount; i++) {
+                            const angle = (i / nodeCount) * 2 * Math.PI;
+                            const x = centerX + radius * Math.cos(angle);
+                            const y = centerY + radius * Math.sin(angle);
+                            
+                            svg += `<circle cx="${x}" cy="${y}" r="10" fill="#3B82F6" />`;
+                            svg += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="10">${i}</text>`;
+                        }
+                        
+                        svg += '</svg>';
+                        return svg;
+                    } catch (error) {
+                        console.error("Error generating fully connected SVG:", error);
+                        return '<svg width="300" height="300"><text x="150" y="150" text-anchor="middle">Error generating visualization</text></svg>';
+                    }
+                }
+                
+                // 生成网格拓扑SVG
+                function generateMeshSVG(nodeCount) {
+                    try {
+                        const width = 300;
+                        const height = 300;
+                        const padding = 40;
+                        
+                        const side = Math.ceil(Math.sqrt(nodeCount));
+                        const cellSize = Math.min((width - 2 * padding) / side, (height - 2 * padding) / side);
+                        
+                        let svg = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`;
+                        
+                        // 添加连接线
+                        for (let i = 0; i < side; i++) {
+                            for (let j = 0; j < side; j++) {
+                                const nodeIndex = i * side + j;
+                                if (nodeIndex >= nodeCount) continue;
+                                
+                                const x = padding + j * cellSize;
+                                const y = padding + i * cellSize;
+                                
+                                // 水平连接
+                                if (j < side - 1 && nodeIndex + 1 < nodeCount) {
+                                    svg += `<line x1="${x}" y1="${y}" x2="${x + cellSize}" y2="${y}" stroke="#9CA3AF" stroke-width="1" />`;
+                                }
+                                
+                                // 垂直连接
+                                if (i < side - 1 && nodeIndex + side < nodeCount) {
+                                    svg += `<line x1="${x}" y1="${y}" x2="${x}" y2="${y + cellSize}" stroke="#9CA3AF" stroke-width="1" />`;
+                                }
+                            }
+                        }
+                        
+                        // 添加节点
+                        for (let i = 0; i < side; i++) {
+                            for (let j = 0; j < side; j++) {
+                                const nodeIndex = i * side + j;
+                                if (nodeIndex >= nodeCount) continue;
+                                
+                                const x = padding + j * cellSize;
+                                const y = padding + i * cellSize;
+                                
+                                svg += `<circle cx="${x}" cy="${y}" r="10" fill="#3B82F6" />`;
+                                svg += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="10">${nodeIndex}</text>`;
+                            }
+                        }
+                        
+                        svg += '</svg>';
+                        return svg;
+                    } catch (error) {
+                        console.error("Error generating mesh SVG:", error);
+                        return '<svg width="300" height="300"><text x="150" y="150" text-anchor="middle">Error generating visualization</text></svg>';
+                    }
+                }
+                
+                // 生成环形拓扑SVG
+                function generateRingSVG(nodeCount) {
+                    try {
+                        const width = 300;
+                        const height = 300;
+                        const radius = 100;
+                        const centerX = width / 2;
+                        const centerY = height / 2;
+                        
+                        let svg = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`;
+                        
+                        // 添加连接线
+                        for (let i = 0; i < nodeCount; i++) {
+                            const angle1 = (i / nodeCount) * 2 * Math.PI;
+                            const x1 = centerX + radius * Math.cos(angle1);
+                            const y1 = centerY + radius * Math.sin(angle1);
+                            
+                            const angle2 = ((i + 1) % nodeCount / nodeCount) * 2 * Math.PI;
+                            const x2 = centerX + radius * Math.cos(angle2);
+                            const y2 = centerY + radius * Math.sin(angle2);
+                            
+                            svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#9CA3AF" stroke-width="1" />`;
+                        }
+                        
+                        // 添加节点
+                        for (let i = 0; i < nodeCount; i++) {
+                            const angle = (i / nodeCount) * 2 * Math.PI;
+                            const x = centerX + radius * Math.cos(angle);
+                            const y = centerY + radius * Math.sin(angle);
+                            
+                            svg += `<circle cx="${x}" cy="${y}" r="10" fill="#3B82F6" />`;
+                            svg += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="10">${i}</text>`;
+                        }
+                        
+                        svg += '</svg>';
+                        return svg;
+                    } catch (error) {
+                        console.error("Error generating ring SVG:", error);
+                        return '<svg width="300" height="300"><text x="150" y="150" text-anchor="middle">Error generating visualization</text></svg>';
+                    }
+                }
+                
+                // 生成星形拓扑SVG
+                function generateStarSVG(nodeCount) {
+                    try {
+                        const width = 300;
+                        const height = 300;
+                        const radius = 100;
+                        const centerX = width / 2;
+                        const centerY = height / 2;
+                        
+                        let svg = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`;
+                        
+                        // 添加连接线
+                        for (let i = 1; i < nodeCount; i++) {
+                            const angle = ((i - 1) / (nodeCount - 1)) * 2 * Math.PI;
+                            const x = centerX + radius * Math.cos(angle);
+                            const y = centerY + radius * Math.sin(angle);
+                            
+                            svg += `<line x1="${centerX}" y1="${centerY}" x2="${x}" y2="${y}" stroke="#9CA3AF" stroke-width="1" />`;
+                        }
+                        
+                        // 添加中心节点
+                        svg += `<circle cx="${centerX}" cy="${centerY}" r="12" fill="#EF4444" />`;
+                        svg += `<text x="${centerX}" y="${centerY}" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="10">0</text>`;
+                        
+                        // 添加外围节点
+                        for (let i = 1; i < nodeCount; i++) {
+                            const angle = ((i - 1) / (nodeCount - 1)) * 2 * Math.PI;
+                            const x = centerX + radius * Math.cos(angle);
+                            const y = centerY + radius * Math.sin(angle);
+                            
+                            svg += `<circle cx="${x}" cy="${y}" r="10" fill="#3B82F6" />`;
+                            svg += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="10">${i}</text>`;
+                        }
+                        
+                        svg += '</svg>';
+                        return svg;
+                    } catch (error) {
+                        console.error("Error generating star SVG:", error);
+                        return '<svg width="300" height="300"><text x="150" y="150" text-anchor="middle">Error generating visualization</text></svg>';
+                    }
+                }
+                
+                // 生成树形拓扑SVG
+                function generateTreeSVG(nodeCount) {
+                    try {
+                        const width = 300;
+                        const height = 300;
+                        const padding = 20;
+                        
+                        let svg = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`;
+                        
+                        // 计算树的深度
+                        const depth = Math.ceil(Math.log2(nodeCount + 1)) - 1;
+                        const levelHeight = (height - 2 * padding) / depth;
+                        
+                        // 递归绘制树
+                        function drawNode(nodeIndex, level, leftX, rightX) {
+                            if (nodeIndex >= nodeCount) return;
+                            
+                            const x = (leftX + rightX) / 2;
+                            const y = padding + level * levelHeight;
+                            
+                            // 绘制到子节点的连接
+                            const leftChildIndex = 2 * nodeIndex + 1;
+                            if (leftChildIndex < nodeCount) {
+                                const childX = (leftX + x) / 2;
+                                const childY = y + levelHeight;
+                                svg += `<line x1="${x}" y1="${y}" x2="${childX}" y2="${childY}" stroke="#9CA3AF" stroke-width="1" />`;
+                                drawNode(leftChildIndex, level + 1, leftX, x);
+                            }
+                            
+                            const rightChildIndex = 2 * nodeIndex + 2;
+                            if (rightChildIndex < nodeCount) {
+                                const childX = (x + rightX) / 2;
+                                const childY = y + levelHeight;
+                                svg += `<line x1="${x}" y1="${y}" x2="${childX}" y2="${childY}" stroke="#9CA3AF" stroke-width="1" />`;
+                                drawNode(rightChildIndex, level + 1, x, rightX);
+                            }
+                            
+                            // 绘制节点
+                            svg += `<circle cx="${x}" cy="${y}" r="10" fill="#3B82F6" />`;
+                            svg += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="10">${nodeIndex}</text>`;
+                        }
+                        
+                        drawNode(0, 0, padding, width - padding);
+                        
+                        svg += '</svg>';
+                        return svg;
+                    } catch (error) {
+                        console.error("Error generating tree SVG:", error);
+                        return '<svg width="300" height="300"><text x="150" y="150" text-anchor="middle">Error generating visualization</text></svg>';
+                    }
+                }
+                
+                // 生成蜻蜓拓扑SVG
+                function generateDragonflySVG(nodeCount) {
+                    try {
+                        const width = 300;
+                        const height = 300;
+                        const padding = 30;
+                        
+                        // 计算组的数量和每组的节点数
+                        const groupSize = Math.ceil(Math.sqrt(nodeCount));
+                        const groupCount = Math.ceil(nodeCount / groupSize);
+                        
+                        // 计算组的布局
+                        const groupRows = Math.ceil(Math.sqrt(groupCount));
+                        const groupCols = Math.ceil(groupCount / groupRows);
+                        
+                        const groupWidth = (width - 2 * padding) / groupCols;
+                        const groupHeight = (height - 2 * padding) / groupRows;
+                        
+                        let svg = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`;
+                        
+                        // 存储节点位置
+                        const nodePositions = [];
+                        
+                        // 绘制组内节点和连接
+                        for (let g = 0; g < groupCount; g++) {
+                            const groupRow = Math.floor(g / groupCols);
+                            const groupCol = g % groupCols;
+                            
+                            const groupCenterX = padding + groupCol * groupWidth + groupWidth / 2;
+                            const groupCenterY = padding + groupRow * groupHeight + groupHeight / 2;
+                            
+                            const nodesInGroup = Math.min(groupSize, nodeCount - g * groupSize);
+                            const groupRadius = Math.min(groupWidth, groupHeight) * 0.35;
+                            
+                            // 绘制组边界
+                            svg += `<circle cx="${groupCenterX}" cy="${groupCenterY}" r="${groupRadius + 5}" fill="none" stroke="#D1D5DB" stroke-width="1" stroke-dasharray="3,3" />`;
+                            
+                            // 绘制组内节点
+                            for (let i = 0; i < nodesInGroup; i++) {
+                                const nodeIndex = g * groupSize + i;
+                                const angle = (i / nodesInGroup) * 2 * Math.PI;
+                                const x = groupCenterX + groupRadius * Math.cos(angle);
+                                const y = groupCenterY + groupRadius * Math.sin(angle);
+                                
+                                nodePositions[nodeIndex] = { x, y, group: g };
+                                
+                                // 组内连接
+                                for (let j = 0; j < i; j++) {
+                                    const prevNodeIndex = g * groupSize + j;
+                                    const prevAngle = (j / nodesInGroup) * 2 * Math.PI;
+                                    const prevX = groupCenterX + groupRadius * Math.cos(prevAngle);
+                                    const prevY = groupCenterY + groupRadius * Math.sin(prevAngle);
+                                    
+                                    svg += `<line x1="${x}" y1="${y}" x2="${prevX}" y2="${prevY}" stroke="#9CA3AF" stroke-width="0.5" />`;
+                                }
+                            }
+                        }
+                        
+                        // 绘制组间连接（简化为每组选一个代表节点）
+                        for (let g1 = 0; g1 < groupCount; g1++) {
+                            for (let g2 = g1 + 1; g2 < groupCount; g2++) {
+                                // 从每组选择第一个节点作为代表
+                                const node1Index = g1 * groupSize;
+                                const node2Index = g2 * groupSize;
+                                
+                                if (node1Index < nodeCount && node2Index < nodeCount) {
+                                    const pos1 = nodePositions[node1Index];
+                                    const pos2 = nodePositions[node2Index];
+                                    
+                                    svg += `<line x1="${pos1.x}" y1="${pos1.y}" x2="${pos2.x}" y2="${pos2.y}" stroke="#9CA3AF" stroke-width="0.5" stroke-dasharray="2,2" />`;
+                                }
+                            }
+                        }
+                        
+                        // 绘制所有节点
+                        for (let i = 0; i < nodeCount; i++) {
+                            const pos = nodePositions[i];
+                            svg += `<circle cx="${pos.x}" cy="${pos.y}" r="8" fill="#3B82F6" />`;
+                            svg += `<text x="${pos.x}" y="${pos.y}" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="8">${i}</text>`;
+                        }
+                        
+                        svg += '</svg>';
+                        return svg;
+                    } catch (error) {
+                        console.error("Error generating dragonfly SVG:", error);
+                        return '<svg width="300" height="300"><text x="150" y="150" text-anchor="middle">Error generating visualization</text></svg>';
+                    }
+                }
+                
+                // 添加事件监听器
+                topologySelect.addEventListener("change", updateNetworkVisualization);
+                nodeCountInput.addEventListener("input", updateNetworkVisualization);
+                
+                // 初始更新
+                updateNetworkVisualization();
+                
+                // 导出更新函数
+                window.updateNetworkVisualization = updateNetworkVisualization;
+            } catch (error) {
+                console.error("Error initializing network simulation:", error);
+            }
+        }
+
+        // 并行架构比较
+        function initArchitectureComparison() {
+            try {
+                const applicationSelect = document.getElementById("application-select");
+                const architectureRecommendation = document.getElementById("architecture-recommendation");
+                
+                // 初始化图表
+                const ctx = document.getElementById("architecture-chart").getContext("2d");
+                architectureChart = new Chart(ctx, {
+                    type: "radar",
+                    data: {
+                        labels: ["通用计算", "数据并行", "可扩展性", "编程难度", "通信开销", "内存访问"],
+                        datasets: [
+                            {
+                                label: "多核共享内存",
+                                data: [9, 6, 3, 8, 9, 9],
+                                backgroundColor: "rgba(59, 130, 246, 0.2)",
+                                borderColor: "rgb(59, 130, 246)",
+                                pointBackgroundColor: "rgb(59, 130, 246)",
+                                pointBorderColor: "#fff",
+                                pointHoverBackgroundColor: "#fff",
+                                pointHoverBorderColor: "rgb(59, 130, 246)"
+                            },
+                            {
+                                label: "分布式内存集群",
+                                data: [7, 7, 9, 4, 5, 5],
+                                backgroundColor: "rgba(239, 68, 68, 0.2)",
+                                borderColor: "rgb(239, 68, 68)",
+                                pointBackgroundColor: "rgb(239, 68, 68)",
+                                pointBorderColor: "#fff",
+                                pointHoverBackgroundColor: "#fff",
+                                pointHoverBorderColor: "rgb(239, 68, 68)"
+                            },
+                            {
+                                label: "GPU加速器",
+                                data: [4, 9, 6, 5, 7, 6],
+                                backgroundColor: "rgba(16, 185, 129, 0.2)",
+                                borderColor: "rgb(16, 185, 129)",
+                                pointBackgroundColor: "rgb(16, 185, 129)",
+                                pointBorderColor: "#fff",
+                                pointHoverBackgroundColor: "#fff",
+                                pointHoverBorderColor: "rgb(16, 185, 129)"
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        aspectRatio: 1.2,
+                        scales: {
+                            r: {
+                                angleLines: {
+                                    display: true
+                                },
+                                suggestedMin: 0,
+                                suggestedMax: 10
+                            }
+                        }
+                    }
+                });
+                
+                // 更新推荐架构
+                function updateArchitectureRecommendation() {
+                    try {
+                        const application = applicationSelect.value;
+                        let recommendation = '';
+                        
+                        switch (application) {
+                            case "general":
+                                recommendation = `
+                                    <p class="mb-1"><span class="font-bold">最佳选择:</span> 多核共享内存</p>
+                                    <p class="mb-1"><span class="font-bold">次佳选择:</span> 分布式内存集群</p>
+                                    <p class="mb-3"><span class="font-bold">适用度:</span> 高</p>
+                                    <p class="text-sm text-gray-700">通用计算任务通常不需要特别高的并行度，多核系统编程简单且通信开销低，是最佳选择。如果问题规模较大，可考虑使用集群。</p>
+                                `;
+                                break;
+                            case "data-parallel":
+                                recommendation = `
+                                    <p class="mb-1"><span class="font-bold">最佳选择:</span> GPU加速器</p>
+                                    <p class="mb-1"><span class="font-bold">次佳选择:</span> 分布式内存集群</p>
+                                    <p class="mb-3"><span class="font-bold">适用度:</span> 极高</p>
+                                    <p class="text-sm text-gray-700">数据并行处理任务非常适合GPU的SIMD架构，可以充分利用数千个核心同时处理数据。对于超大规模数据，分布式集群也是不错的选择。</p>
+                                `;
+                                break;
+                            case "ml":
+                                recommendation = `
+                                    <p class="mb-1"><span class="font-bold">最佳选择:</span> GPU加速器</p>
+                                    <p class="mb-1"><span class="font-bold">次佳选择:</span> 多GPU集群</p>
+                                    <p class="mb-3"><span class="font-bold">适用度:</span> 极高</p>
+                                    <p class="text-sm text-gray-700">机器学习特别是深度学习训练涉及大量矩阵运算，非常适合GPU的并行处理能力。大型模型训练通常需要多GPU或GPU集群协同工作。</p>
+                                `;
+                                break;
+                            case "hpc":
+                                recommendation = `
+                                    <p class="mb-1"><span class="font-bold">最佳选择:</span> 分布式内存集群</p>
+                                    <p class="mb-1"><span class="font-bold">次佳选择:</span> 异构集群（CPU+GPU）</p>
+                                    <p class="mb-3"><span class="font-bold">适用度:</span> 高</p>
+                                    <p class="text-sm text-gray-700">高性能科学计算通常需要大规模计算资源和复杂的数据依赖关系处理，分布式集群能提供最佳的可扩展性。部分计算密集型任务可以由GPU加速。</p>
+                                `;
+                                break;
+                            case "graph":
+                                recommendation = `
+                                    <p class="mb-1"><span class="font-bold">最佳选择:</span> GPU加速器</p>
+                                    <p class="mb-1"><span class="font-bold">次佳选择:</span> 多核共享内存</p>
+                                    <p class="mb-3"><span class="font-bold">适用度:</span> 极高</p>
+                                    <p class="text-sm text-gray-700">图形渲染是GPU的原生应用场景，能够提供最佳性能。现代GPU包含专用的光线追踪和着色单元，可大幅加速渲染过程。</p>
+                                `;
+                                break;
+                        }
+                        
+                        architectureRecommendation.innerHTML = recommendation;
+                        
+                        // 更新图表数据以突出显示相关应用
+                        let datasets = architectureChart.data.datasets;
+                        
+                        switch (application) {
+                            case "general":
+                                datasets[0].data = [9, 6, 3, 8, 9, 9];
+                                datasets[1].data = [7, 7, 9, 4, 5, 5];
+                                datasets[2].data = [4, 9, 6, 5, 7, 6];
+                                break;
+                            case "data-parallel":
+                                datasets[0].data = [7, 6, 3, 8, 9, 9];
+                                datasets[1].data = [6, 8, 9, 4, 5, 5];
+                                datasets[2].data = [4, 10, 6, 6, 7, 6];
+                                break;
+                            case "ml":
+                                datasets[0].data = [5, 5, 3, 7, 9, 9];
+                                datasets[1].data = [6, 7, 9, 4, 5, 5];
+                                datasets[2].data = [4, 10, 7, 6, 7, 6];
+                                break;
+                            case "hpc":
+                                datasets[0].data = [7, 5, 3, 7, 9, 9];
+                                datasets[1].data = [8, 8, 10, 4, 5, 5];
+                                datasets[2].data = [5, 9, 6, 5, 7, 6];
+                                break;
+                            case "graph":
+                                datasets[0].data = [6, 5, 3, 7, 9, 9];
+                                datasets[1].data = [4, 6, 8, 4, 5, 5];
+                                datasets[2].data = [9, 10, 6, 7, 8, 6];
+                                break;
+                        }
+                        
+                        architectureChart.update();
+                    } catch (error) {
+                        console.error("Error updating architecture recommendation:", error);
+                    }
+                }
+                
+                // 添加事件监听器
+                applicationSelect.addEventListener("change", updateArchitectureRecommendation);
+                
+                // 初始更新
+                updateArchitectureRecommendation();
+                
+                // 导出更新函数
+                window.updateArchitectureChart = function() {
+                    architectureChart.update();
+                };
+            } catch (error) {
+                console.error("Error initializing architecture comparison:", error);
+            }
+        }
+
+        // 页面加载完成后初始化所有模拟
+        document.addEventListener("DOMContentLoaded", function() {
+            try {
+                // 初始化标签页
+                initTabs();
+                
+                // 初始化各个模拟
+                initAmdahlSimulation();
+                initPowerSimulation();
+                initNetworkSimulation();
+                initArchitectureComparison();
+                
+                // 添加窗口大小变化时重新渲染图表的处理
+                window.addEventListener("resize", function() {
+                    try {
+                        if (amdahlChart) amdahlChart.resize();
+                        if (powerChart) powerChart.resize();
+                        if (architectureChart) architectureChart.resize();
+                    } catch (error) {
+                        console.error("Error resizing charts:", error);
+                    }
+                });
+            } catch (error) {
+                console.error("Error during initialization:", error);
+            }
+        });
+    </script>
+<script>window.parent.postMessage({ action: "ready" }, "*"); 
+ 
+window.console = new Proxy(console, {
+  get(target, prop) {
+    if (['log', 'warn', 'error'].includes(prop)) {
+      return new Proxy(target[prop], {
+        apply(fn, thisArg, args) {
+          fn.apply(thisArg, args);
+          window.parent.postMessage({ action: 'console', 
+            type: prop, 
+            args: args.map((arg) => {
+              try {
+                return JSON.stringify(arg).replace(/^["']|["']$/g, '');
+              } catch (e) {
+                return arg;
+              }
+            }) 
+          }, '*');
+        }
+      });
+    }
+    return target[prop];
+  }
+});
+</script></body>
+</html>
