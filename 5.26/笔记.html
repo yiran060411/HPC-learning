@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>悉尼大学计算机科学课程：并行编程实践笔记</title>
+<style>
+            :root {
+                --font-size-body: 16px;
+                --font-size-h5: 16px;       
+                --font-size-h4: 18px;    
+                --font-size-h3: 20px;     
+                --font-size-h2: 24px;    
+                --font-size-h1: 28px;    
+            }
+            body {
+                font-feature-settings: 'liga' off, 'clig' off;
+                font-family: "SF Pro";
+                font-size: var(--font-size-body);
+                color: #333B46;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 1.5; 
+                margin: 0 24px 0 24px; /* 上 右 下 左 */
+                padding: 0px;
+            }
+            .container {
+                max-width: 800px;
+                margin: 0px auto;
+                padding: 24px 40px;
+                background-color: #fff;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                border-radius: 8px;
+            }
+            .chart-container {
+                position: relative;
+                margin: 3em auto;
+                max-width: 500px;
+                height: 400px;
+                overflow: visible;
+            }
+
+        
+        
+        h1, h2, h3, h4 {
+            color: #1a1a1a;
+            font-weight: 600;
+            line-height: 1.3;
+            margin-top: 2em;
+            margin-bottom: 0.8em;
+        }
+        h1 {
+            font-size: 2.2em; /* 35.2px */
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.5em;
+            text-align: center;
+        }
+        h2 {
+            font-size: 1.8em; /* 28.8px */
+            margin-top: 2.5em;
+            border-bottom: 1px solid #f0f0f0; /* Lighter anH2_BORDER_COLOR */
+            padding-bottom: 0.3em;
+        }
+        h3 {
+            font-size: 1.4em; /* 22.4px */
+            margin-top: 2em;
+        }
+        h4 {
+            font-size: 1.1em; /* 17.6px */
+            font-weight:bold;
+        }
+        p {
+            margin-bottom: 1.2em;
+        }
+        a {
+            color: #0067c0; /* A deep, accessible blue */
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        blockquote {
+            border-left: 3px solid #0067c0;
+            padding-left: 1.5em; /* More padding */
+            margin-left: 0;
+            margin-right: 0;
+            font-style: italic;
+            color: #555;
+            background-color: #f9f9f9; /* Light background for quotes */
+            padding-top: 0.5em;
+            padding-bottom: 0.5em;
+            border-radius: 4px;
+        }
+        pre {
+            background-color: #2d2d2d; /* Darker background for code */
+            color: #f8f8f2; /* Light text for dark background */
+            border: 1px solid #444; /* Darker border */
+            padding: 1.2em;
+            overflow-x: auto;
+            border-radius: 6px;
+            font-size: 0.9em;
+            line-height: 1.5; /* Better line height for code */
+        }
+        code {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            background-color: #eef0f1; /* Lighter inline code background */
+            color: #393318; /* Darker text for inline code */
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        pre code {
+            background-color: transparent;
+            padding: 0;
+            border-radius: 0;
+            font-size: 1em;
+            color: #f8f8f2; /* Ensure pre code inherits pre color */
+        }
+        figure {
+            margin: _2em 0;
+            text-align: center;
+        }
+        figcaption {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 0.8em; /* More space for figcaption */
+            text-align: center;
+            font-style: italic;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            border: 1px solid #eee; /* Subtle border for images */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5em;
+            font-size: 0.95em; /* Slightly smaller table font */
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 0.8em;
+            text-align: left;
+        }
+        th {
+            background-color: #f5f5f5;
+            font-weight: 600;
+        }
+        hr {
+            border: 0;
+            height: 1px;
+            background-color: #ddd; /* More visible hr */
+            margin: 3em 0;
+        }
+        .footnote-ref {
+            vertical-align: super;
+            font-size: 0.8em;
+            margin-left: 2px;
+        }
+        .footnotes {
+            margin-top: 3em;
+            padding-top: 1em;
+            border-top: 1px solid #ddd;
+        }
+        .footnotes h4 {
+            font-size: 1.2em; /* Footnote title size */
+            margin-bottom: 0.8em;
+            margin-top: 0;
+        }
+        .footnotes ol {
+            padding-left: 20px;
+            font-size: 0.9em;
+            list-style-type: decimal;
+        }
+        .footnotes li {
+            margin-bottom: 0.6em;
+            color: #444;
+        }
+        .footnotes li a {
+            text-decoration: none;
+            color: #0067c0;
+        }
+        .footnotes li a[title="返回正文"] { /* Style for backlink */
+            margin-left: 5px;
+        }
+        /* Key Takeaways Box Style */
+        .key-takeaways {
+            background-color: #e7f3fe; /* Light blue background */
+            border-left: 5px solid #2196F3; /* Blue left border */
+            padding: 1.2em 1.5em;
+            margin: 2em 0;
+            border-radius: 4px;
+            font-size: 0.95em;
+        }
+        .key-takeaways h4 {
+            margin-top: 0;
+            margin-bottom: 0.7em;
+            color: #1e88e5; /* Darker blue for title */
+            font-size: 1.1em;
+        }
+        .key-takeaways ul {
+            list-style-type: disc; /* Standard disc bullets */
+            padding-left: 20px;
+            margin-bottom: 0;
+        }
+        .key-takeaways li {
+            margin-bottom: 0.4em;
+        }
+        .toc {
+            background-color: #f9f9f9;
+            padding: 1em 1.5em;
+            border-radius: 6px;
+            margin-bottom: 2em;
+            border: 1px solid #eee;
+        }
+        .toc h3 {
+            margin-top: 0;
+            margin-bottom: 0.5em;
+            font-size: 1.3em;
+            text-align:center;
+        }
+        .toc ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .toc ul ul {
+            padding-left: 20px; /* Indent sub-items */
+        }
+        .toc li {
+            margin-bottom: 0.5em;
+        }
+        .toc_level_1 > a { font-weight: bold; }
+        .toc_level_2 > a { }
+
+    </style>
+</head>
+<body>
+<div class="container">
+<h1>悉尼大学计算机科学课程：并行编程实践笔记</h1>
+<p style="text-align:center; font-style:italic; color:#555;">基于 Bing Bing Zhou 教授的 HUST-USYD 暑期学校并行编程实践讲座 (Lecture 2, 2024) 整理</p>
+<hr/>
+<nav class="toc">
+<h3>目录导航</h3>
+<ul>
+<li class="toc_level_1"><a href="#引言开启高效并行编程之旅">引言：开启高效并行编程之旅</a>
+<ul>
+<li class="toc_level_2"><a href="#并行计算的魅力与挑战">并行计算的魅力与挑战</a></li>
+<li class="toc_level_2"><a href="#性能优化的黄金法则">性能优化的黄金法则</a></li>
+<li class="toc_level_2"><a href="#本笔记导览">本笔记导览</a></li>
+</ul>
+</li>
+<li class="toc_level_1"><a href="#核心基石理解计算机的记忆与计算">核心基石：理解计算机的记忆与计算</a>
+<ul>
+<li class="toc_level_2"><a href="#内存层次结构-memory-hierarchy">内存层次结构 (Memory Hierarchy)</a></li>
+<li class="toc_level_2"><a href="#计算强度-computational-intensity">计算强度 (Computational Intensity)</a></li>
+</ul>
+</li>
+<li class="toc_level_1"><a href="#性能调优利器矩阵乘法优化">性能调优利器：矩阵乘法优化</a>
+<ul>
+<li class="toc_level_2"><a href="#矩阵乘法一个经典的优化试验场">矩阵乘法：一个经典的优化试验场</a></li>
+<li class="toc_level_2"><a href="#基础实现-naive-ijk-与瓶颈剖析">基础实现 (Naive ijk) 与瓶颈剖析</a></li>
+<li class="toc_level_2"><a href="#核心优化策略一循环顺序变换-loop-order-transformation-与连续内存访问">核心优化策略一：循环顺序变换 (Loop Order Transformation) 与连续内存访问</a></li>
+<li class="toc_level_2"><a href="#核心优化策略二分块技术-blockingtiling">核心优化策略二：分块技术 (Blocking/Tiling)</a></li>
+</ul>
+</li>
+<li class="toc_level_1"><a href="#性能调优利器循环展开-loop-unrolling">性能调优利器：循环展开 (Loop Unrolling)</a>
+<ul>
+<li class="toc_level_2"><a href="#循环展开技术原理详解">循环展开技术原理详解</a></li>
+<li class="toc_level_2"><a href="#代码示例循环展开的实践与应用">代码示例：循环展开的实践与应用</a></li>
+<li class="toc_level_2"><a href="#循环展开的优势考量与权衡">循环展开的优势、考量与权衡</a></li>
+</ul>
+</li>
+<li class="toc_level_1"><a href="#优化技术综合应用与实践">优化技术综合应用与实践</a>
+<ul>
+<li class="toc_level_2"><a href="#结合多种优化技术11--2">结合多种优化技术：1+1 &gt; 2</a></li>
+<li class="toc_level_2"><a href="#实验与调试性能优化的必经之路">实验与调试：性能优化的必经之路</a></li>
+</ul>
+</li>
+<li class="toc_level_1"><a href="#附录">附录</a>
+<ul>
+<li class="toc_level_2"><a href="#关键术语表">A.1 关键术语表</a></li>
+<li class="toc_level_2"><a href="#推荐阅读参考资料">A.2 推荐阅读/参考资料</a></li>
+</ul>
+</li>
+</ul>
+</nav>
+<hr/>
+<section id="引言开启高效并行编程之旅">
+<h2>引言：开启高效并行编程之旅</h2>
+<p>欢迎来到并行编程的世界！随着单个处理器性能提升遭遇物理瓶颈，利用多个计算单元协同工作已成为提升复杂应用性能的关键。本笔记旨在梳理并行编程中的核心概念与实践技巧，帮助大家开启高效的并行计算之旅。</p>
+<h3 id="并行计算的魅力与挑战">并行计算的魅力与挑战</h3>
+<p>过去几十年，计算机性能的飞速发展很大程度上得益于摩尔定律的驱动——集成电路上可容纳的晶体管数量约每隔18至24个月便会增加一倍。然而，近年来单核CPU的时钟频率增长放缓，取而代之的是多核、众核处理器的普及。这意味着，要想让我们的程序跑得更快、处理更大规模的问题，仅仅依赖更快的“单打独斗”已不再现实，学会如何组织“团队协作”——即并行计算——变得至关重要。</p>
+<p>并行计算的<strong>魅力</strong>在于它赋予我们前所未有的能力：</p>
+<ul>
+<li><strong>解决更大规模问题</strong>：对于单个处理器难以在合理时间内完成的庞大计算任务（如天气预报、基因测序、大规模数据分析），并行计算可以将任务分解，利用众多计算资源合力攻克。</li>
+<li><strong>获得更快计算速度</strong>：通过同时执行多个子任务，并行计算可以显著缩短程序的总运行时间，提升效率。</li>
+</ul>
+<p>然而，并行计算也带来了不小的<strong>挑战</strong>：</p>
+<ul>
+<li><strong>程序设计复杂性增加</strong>：如何有效地将问题分解成可并行处理的部分？如何协调不同部分的执行顺序和数据共享？这些都需要全新的设计思维。</li>
+<li><strong>资源管理难度</strong>：合理分配和调度计算资源、管理内存、确保数据一致性等，都比串行程序复杂得多。</li>
+<li><strong>性能调优的必要性</strong>：并非简单地将程序并行化就能获得理想的性能提升。正如课程资料所指出的，“大多数未优化的并行程序运行效率远低于机器‘峰值’性能的10%”（<a href="#ref_lecture02" target="_blank">HUST-USYD Lecture 2</a>）。这通常意味着大量的性能潜力被浪费了。</li>
+</ul>
+<p>本笔记将围绕悉尼大学计算机科学课程中关于并行编程实践的核心内容，帮助读者理解这些挑战，并掌握提升并行程序性能的关键方法论与技术细节。</p>
+<h3 id="性能优化的黄金法则">性能优化的黄金法则</h3>
+<p>程序性能为何如此重要？对于用户而言，它直接关系到体验的流畅度；对于开发者和企业，它关系到计算资源的有效利用率和运营成本。在并行计算领域，性能优化不仅仅是“锦上添花”，更是发挥硬件潜力的“必修课”。</p>
+<p>一个令人警醒的事实是，许多性能瓶颈并非源于并行化本身的开销，而是“大部分性能损失发生在单处理器上，其中又以内存系统的低效使用为首要原因”（<a href="#ref_lecture02" target="_blank">HUST-USYD Lecture 2</a>）。这意味着，在考虑复杂的并行策略之前，我们必须首先理解并优化程序在单个处理核心上的行为，特别是它与计算机内存系统的交互方式。</p>
+<p>因此，性能优化的黄金法则之一便是：<strong>深刻理解硬件特性，编写对硬件友好的代码</strong>。这就像一位优秀的赛车手，不仅要驾驶技术高超，更要对赛车的引擎、轮胎、空气动力学以及赛道的每一个弯道了如指掌，才能将赛车的性能发挥到极致。在本笔记中，我们将重点探讨计算机的内存层次结构，并学习如何通过优化数据访问模式来“取悦”硬件，从而榨取更高的性能。</p>
+<h3 id="本笔记导览">本笔记导览</h3>
+<p>本笔记旨在系统梳理并行编程实践中的关键知识点，特别是针对性能优化层面。我们将从以下几个核心方面展开：</p>
+<ol>
+<li><strong>核心基石</strong>：深入理解计算机的“记忆”（内存层次结构）与“计算”（计算强度）之间的关系，这是所有性能优化的理论基础。</li>
+<li><strong>性能调优利器之矩阵乘法</strong>：以矩阵乘法这一经典计算密集型任务为例，详细剖析如何通过循环顺序变换、连续内存访问和分块技术等手段大幅提升程序性能。</li>
+<li><strong>性能调优利器之循环展开</strong>：探讨循环展开技术的原理、应用及其对寄存器利用、指令级并行的影响。</li>
+<li><strong>综合应用与实践</strong>：讨论如何将多种优化技术结合使用，以及实验在性能调优过程中的重要性。</li>
+</ol>
+<p>为了让计算机科学的初学者也能轻松理解，本笔记将尽量使用通俗易懂的语言，并辅以图示、代码示例和关键概念解释。我们希望通过这份笔记，你能对并行程序性能优化建立一个清晰的框架，并为后续更深入的学习打下坚实的基础。</p>
+</section>
+<hr/>
+<section id="核心基石理解计算机的记忆与计算">
+<h2>核心基石：理解计算机的记忆与计算</h2>
+<p>在探寻程序性能优化的奥秘之前，我们必须先了解计算机是如何存储数据（记忆）以及如何处理数据（计算）的。这两个方面紧密相连，它们之间的交互效率直接决定了程序的运行速度。本章将聚焦于两个核心概念：内存层次结构和计算强度。</p>
+<h3 id="内存层次结构-memory-hierarchy">内存层次结构 (Memory Hierarchy)</h3>
+<p><em>内存层次结构</em><sup><a href="#fn1" id="ref1">1</a></sup> (Memory Hierarchy) 是计算机系统为了在速度、容量和成本之间取得平衡而精心设计的多级存储系统。可以把它想象成一个金字塔，越往塔尖，存储设备速度越快、每比特成本越高，但容量也越小；越往塔底，则反之。理解这一结构对于编写高性能程序至关重要，因为它直接影响着CPU获取数据的效率。</p>
+<h4 id="内存金字塔为何存在与如何构成">内存金字塔：为何存在与如何构成</h4>
+<p>内存层次结构存在的根本原因在于“<strong>速度鸿沟</strong>”：CPU（中央处理器）的处理速度远非主内存（RAM）的访问速度所能企及。如果CPU每次计算都需要直接从缓慢的主内存中等待数据，那么CPU的大部分时间都将处于空闲等待状态，其强大的计算能力将无从发挥。为了缓解这一矛盾，计算机设计师引入了介于CPU和主内存之间的一系列更小、更快的存储设备——缓存（Cache）。</p>
+<p>一个典型的内存金字塔从上至下主要包括以下几个层级：</p>
+<ul>
+<li><strong>寄存器 (Registers)</strong>:
+                    <ul>
+<li><strong>定义</strong>：位于CPU内部，是速度最快、容量最小的存储单元。</li>
+<li><strong>特性</strong>：访问速度通常在1纳秒（ns）以内，容量极小（通常为KB级别）。</li>
+<li><strong>作用</strong>：直接参与CPU的算术逻辑运算，用于暂存指令、操作数和中间结果。例如，在执行 <code>c = a + b</code> 时，<code>a</code>, <code>b</code>, <code>c</code> 的值很可能就存放在寄存器中。</li>
+</ul>
+</li>
+<li><strong>缓存 (Cache)</strong>:
+                    <ul>
+<li><strong>定义</strong>：位于CPU和主内存之间的高速小容量存储器，通常由SRAM（静态随机存取存储器）构成。</li>
+<li><strong>特性</strong>：分为多级（L1, L2, L3）。L1缓存最靠近CPU核心，速度最快（约几纳秒），容量最小（几十KB）；L2缓存次之（约十几纳秒，几百KB到几MB）；L3缓存通常为多核共享，速度更慢一些（几十纳秒），容量更大（几MB到几十MB）。</li>
+<li><strong>作用</strong>：存储CPU近期最常访问或可能即将访问的数据和指令的副本。目标是让CPU尽可能从缓存中获取数据，而不是直接访问主内存。</li>
+</ul>
+</li>
+<li><strong>主内存 (Main Memory / RAM)</strong>:
+                    <ul>
+<li><strong>定义</strong>：程序运行时主要的数据和指令存储区域，通常由DRAM（动态随机存取存储器）构成。</li>
+<li><strong>特性</strong>：容量较大（GB到TB级别），访问速度远慢于缓存（约50-100纳秒）。</li>
+<li><strong>作用</strong>：存放正在运行的操作系统、应用程序及其数据。</li>
+</ul>
+</li>
+<li><strong>辅助存储 (Secondary Storage / Disk)</strong>:
+                    <ul>
+<li><strong>定义</strong>：如固态硬盘（SSD）、机械硬盘（HDD）等，用于数据的持久化存储。</li>
+<li><strong>特性</strong>：容量最大（TB到PB级别），访问速度最慢（毫秒级别甚至更长）。</li>
+<li><strong>作用</strong>：存储操作系统、应用程序文件、用户数据等，在计算机关机后数据不会丢失。</li>
+</ul>
+</li>
+</ul>
+<p>下表总结了这些层级的典型特性对比：</p>
+<table>
+<thead>
+<tr>
+<th>存储层级</th>
+<th>典型访问时间</th>
+<th>典型容量</th>
+<th>相对成本/位</th>
+<th>主要作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>寄存器 (Registers)</td>
+<td>&lt; 1 ns</td>
+<td>几十至几百 Bytes/核心</td>
+<td>最高</td>
+<td>CPU直接操作数和指令暂存</td>
+</tr>
+<tr>
+<td>L1 缓存 (Cache)</td>
+<td>~1-4 ns</td>
+<td>几十 KB/核心</td>
+<td>高</td>
+<td>存储最常用数据和指令</td>
+</tr>
+<tr>
+<td>L2 缓存 (Cache)</td>
+<td>~10-20 ns</td>
+<td>几百 KB - 几 MB/核心</td>
+<td>中</td>
+<td>存储较常用数据和指令</td>
+</tr>
+<tr>
+<td>L3 缓存 (Cache)</td>
+<td>~30-70 ns</td>
+<td>几 MB - 几十 MB (共享)</td>
+<td>中低</td>
+<td>多核共享，存储常用数据和指令</td>
+</tr>
+<tr>
+<td>主内存 (RAM)</td>
+<td>~100-200 ns (包含控制器延迟)</td>
+<td>GBs - TBs</td>
+<td>低</td>
+<td>运行中的程序和数据</td>
+</tr>
+<tr>
+<td>磁盘存储 (SSD/HDD)</td>
+<td>0.1ms (SSD) - 10ms (HDD)</td>
+<td>TBs - PBs</td>
+<td>最低</td>
+<td>永久存储</td>
+</tr>
+</tbody>
+</table>
+<h4 id="图解典型的内存层次结构">图解：典型的内存层次结构</h4>
+<figure>
+<img alt="典型的内存层次结构示意图" src="https://picture-search.tiangong.cn/image/doc/a958321fc068ab9ea0c962d870dec4fb.jpg"/>
+<figcaption>图 1：计算机内存层次结构示意图 (来源: <a href="#ref_lecture02" target="_blank">HUST-USYD Lecture 2</a>)。本图清晰展示了从CPU内部的寄存器到外部磁盘存储的典型层级。越靠近CPU，存储设备的速度越快、每比特成本越高、容量越小。程序性能很大程度上取决于数据在这些层级间的有效流转。</figcaption>
+</figure>
+<h4 id="数据局部性原理-principle-of-locality">数据局部性原理 (Principle of Locality)</h4>
+<p><em>数据局部性原理</em> (Principle of Locality) 是程序在执行过程中展现出的一种普遍的访问模式倾向，它是缓存系统能够有效工作的基石。如果程序访问数据是完全随机、毫无规律的，那么缓存几乎起不到任何作用。幸运的是，大多数程序都表现出良好的局部性。局部性主要分为两种：</p>
+<ul>
+<li><strong>时间局部性 (Temporal Locality)</strong>: 指的是如果一个数据项被访问了，那么在不久的将来它很可能被再次访问。
+                    <ul>
+<li><strong>例子</strong>：循环中的计数器变量、在一个函数中被多次读取或修改的某个变量、频繁调用的函数中的指令。</li>
+<li><strong>缓存如何利用</strong>：当一个数据项被加载到缓存后，它会驻留在那里一段时间。如果该数据项很快被再次访问（时间局部性），CPU就能直接从快速的缓存中获取它，而无需访问慢速的主内存。</li>
+</ul>
+</li>
+<li><strong>空间局部性 (Spatial Locality)</strong>: 指的是如果一个数据项被访问了，那么与它地址相近（即在内存中物理位置相邻）的数据项也很可能在不久的将来被访问。
+                    <ul>
+<li><strong>例子</strong>：顺序遍历数组中的元素 (如 <code>for (i=0; i<n; arr[i];<="" code="" i++)="">)、访问结构体或对象中的相邻成员变量、CPU顺序执行指令代码。</n;></code></li>
+<li><strong>缓存如何利用</strong>：当CPU请求某个数据项而该数据项不在缓存中时（称为缓存未命中），系统不仅仅只加载这一个数据项到缓存，而是加载包含该数据项的一个连续的数据块，这个块称为<em>缓存行</em> (Cache Line)。如果程序接着访问该数据项附近的数据（空间局部性），这些数据很可能已经在第一次加载时一同进入了缓存，从而可以直接从缓存中快速获取。</li>
+</ul>
+</li>
+</ul>
+<p>可以这样通俗地理解：时间局部性就像你刚用过的一本书，很可能马上还要再翻看它；空间局部性就像你看完书的第10页，接下来很可能会看第11页或第9页。计算机的缓存系统正是巧妙地利用了程序的这两种“习惯”。</p>
+<h4 id="缓存-cache-的运作机制与性能影响">缓存 (Cache) 的运作机制与性能影响</h4>
+<p>缓存的工作核心在于存储主内存中部分数据的副本，以便CPU能够更快地访问它们。其运作涉及几个关键概念：</p>
+<ul>
+<li><strong>缓存行 (Cache Line / Cache Block)</strong>: 这是缓存与主内存之间数据传输的最小单位。当发生缓存未命中时，系统会从主内存中读取一整个缓存行的数据放入缓存。一个缓存行的大小通常是几十字节，例如64字节或128字节。选择合适的缓存行大小是硬件设计中的一个权衡：太小则空间局部性利用不充分，传输开销相对较大；太大则可能导致缓存污染（加载了不需要的数据）且命中率降低。</li>
+<li><strong>缓存命中 (Cache Hit)</strong>: 当CPU需要访问某个内存地址的数据时，它首先检查该数据是否存在于缓存中。如果找到了，就称为一次“缓存命中”。CPU可以直接从缓存中高速读取数据，这是理想的情况。</li>
+<li><strong>缓存未命中 (Cache Miss)</strong>: 如果CPU要访问的数据不在缓存中，就称为一次“缓存未命中”。这时，CPU必须暂停（或执行其他不依赖该数据的指令），等待系统从下一级存储（例如L1未命中则查L2，L2未命中则查L3，L3未命中则从主内存）将包含所需数据的整个缓存行加载到当前级缓存中，然后再提供给CPU。这个过程会带来显著的延迟，称为“未命中惩罚 (Miss Penalty)”。</li>
+</ul>
+<p>显然，<strong>减少缓存未命中率 (Cache Miss Rate)</strong> 是提升程序性能的关键目标之一。缓存未命中率是指未命中次数占总内存访问次数的比例。较低的未命中率意味着程序能更频繁地从快速缓存中获取数据，从而减少等待时间，提高整体执行效率。我们后续讨论的各种优化技术，如改变循环顺序、分块、循环展开等，很多都是直接或间接地为了提高缓存命中率，更好地利用数据局部性。</p>
+<div class="key-takeaways">
+<h4>内存层次结构关键要点</h4>
+<ul>
+<li>内存层次结构通过多级存储（寄存器、缓存、主存、辅存）平衡速度、容量与成本。</li>
+<li>其存在是为了弥补CPU与主内存之间的巨大速度差异。</li>
+<li>数据局部性原理（时间局部性和空间局部性）是缓存有效工作的基础。</li>
+<li>缓存通过存储常用数据副本，以缓存行（数据传输的最小单位）为单位运作。</li>
+<li>缓存命中带来快速访问，缓存未命中导致显著延迟。</li>
+<li>优化目标之一是提高缓存命中率，减少未命中。</li>
+</ul>
+</div>
+<h3 id="计算强度-computational-intensity">计算强度 (Computational Intensity)</h3>
+<p><em>计算强度</em><sup><a href="#fn2" id="ref2">2</a></sup> (Computational Intensity)，有时也称为操作强度 (Operational Intensity)，是衡量一个算法或程序中，其核心计算部分执行的算术运算次数与访问慢速内存的数据量之间比例的一个重要指标。它帮助我们理解一个程序是“计算密集型”（大部分时间在做运算）还是“访存密集型”（大部分时间在等待数据）。</p>
+<h4 id="定义意义与度量方法">定义、意义与度量方法</h4>
+<p>简单来说，计算强度就是“程序做了多少次有用的计算”与“为此从慢速内存搬运了多少数据”的比值。其数学定义（参考<a href="#ref_lecture02" target="_blank">HUST-USYD Lecture 2</a>）可以表示为：</p>
+<p style="text-align:center;"><code>q = f<sub>ops</sub> / m<sub>bytes</sub></code></p>
+<p>或者，如果以字 (word) 为单位衡量内存访问：</p>
+<p style="text-align:center;"><code>q = f<sub>ops</sub> / m<sub>words_slow_memory</sub></code></p>
+<p>其中：</p>
+<ul>
+<li><code>f<sub>ops</sub></code> (Floating Point Operations, FLOPs): 指的是浮点运算的次数。在更广义的上下文中，也可以是整数运算或其他核心算术运算的次数。</li>
+<li><code>m<sub>bytes</sub></code> 或 <code>m<sub>words_slow_memory</sub></code>: 指的是在程序执行过程中，从慢速存储器（如主内存）移动到快速存储器（如CPU缓存或寄存器）的数据总量，单位可以是字节数或字数。重要的是，这里指的是“慢速内存”的访问量，因为这部分是主要的性能瓶颈。</li>
+</ul>
+<p>计算强度的度量单位通常是 <strong>FLOPs/Byte</strong> (每字节数据对应多少次浮点运算)。</p>
+<p><strong>计算强度的意义</strong>在于：</p>
+<ul>
+<li><strong>指导性能优化</strong>：
+                <ul>
+<li><strong>高计算强度 (High q)</strong>：意味着算法在加载到快速内存的每一个数据单元上执行了大量的计算。这样的算法能更有效地利用CPU的计算资源，性能瓶颈更可能在于CPU的运算速度，而不是内存带宽。优化方向可能是进一步提高指令级并行、利用向量指令等。</li>
+<li><strong>低计算强度 (Low q)</strong>：意味着算法需要频繁地从慢速内存中获取数据，而每个数据单元上执行的计算相对较少。这类算法的性能往往受限于内存带宽。优化方向主要是减少内存访问次数，或者增加每次加载数据后的计算量（即提高数据复用）。</li>
+</ul>
+</li>
+<li><strong>评估算法与机器的匹配度</strong>：课程中提到了“机器平衡 (Machine Balance)”的概念，它反映了特定计算机硬件的计算能力与内存带宽之间的比率。通常表示为 <code>B = PeakFLOPsRate / PeakMemoryBandwidthRate</code>。一个算法要想在该机器上高效运行，其计算强度 <code>q</code> 最好能与机器的平衡参数 <code>B</code> 相匹配或更高。讲义中给出了一个相关的条件：为了获得至少一半的峰值速度，算法的计算强度 `q` 需要大于或等于 `t<sub>m</sub> / t<sub>f</sub>`，其中 `t<sub>m</sub>` 是单次慢速内存操作的平均时间，<code>t<sub>f</sub>` 是单次算术操作的平均时间。这个比率实际上反映了机器一次内存操作时间内能完成多少次算术操作。</code></li>
+</ul>
+<h4 id="计算强度与程序性能的关系">计算强度与程序性能的关系</h4>
+<p>我们可以通过一个简化的时间模型来理解计算强度如何影响程序总执行时间（参考<a href="#ref_lecture02" target="_blank">HUST-USYD Lecture 2</a>）。假设一个程序包含 `f<sub>ops</sub>` 次算术运算和 `m<sub>data</sub>` 次慢速内存数据移动。</p>
+<p>理想情况下，如果所有数据都已在最快速的内存（如寄存器）中，执行时间主要由计算决定：</p>
+<p style="text-align:center;"><code>T<sub>ideal</sub> = f<sub>ops</sub> × t<sub>f</sub></code></p>
+<p>其中 <code>t<sub>f</sub></code> 是每次算术运算的平均时间。</p>
+<p>实际情况下，总执行时间包括计算时间和内存访问时间：</p>
+<p style="text-align:center;"><code>T<sub>actual</sub> = (f<sub>ops</sub> × t<sub>f</sub>) + (m<sub>data</sub> × t<sub>m</sub>)</code></p>
+<p>其中 <code>t<sub>m</sub></code> 是每次慢速内存数据单元移动的平均时间。</p>
+<p>将上式变形，引入计算强度 <code>q = f<sub>ops</sub> / m<sub>data</sub></code>：</p>
+<p style="text-align:center;"><code>T<sub>actual</sub> = f<sub>ops</sub> × t<sub>f</sub> × (1 + (m<sub>data</sub> × t<sub>m</sub>) / (f<sub>ops</sub> × t<sub>f</sub>))</code></p>
+<p style="text-align:center;"><code>T<sub>actual</sub> = f<sub>ops</sub> × t<sub>f</sub> × (1 + (1/q) × (t<sub>m</sub> / t<sub>f</sub>))</code></p>
+<p>从这个公式可以看出：</p>
+<ul>
+<li>当计算强度 <code>q</code> 非常大时，<code>(1/q)</code> 趋近于0，因此 <code>T<sub>actual</sub></code> 趋近于 <code>f<sub>ops</sub> × t<sub>f</sub></code>。这意味着程序的性能主要由CPU的计算能力决定，是<strong>计算密集型 (Compute-Bound)</strong>。</li>
+<li>当计算强度 <code>q</code> 较小时，<code>(1/q) × (t<sub>m</sub> / t<sub>f</sub>)</code> 这一项会比较显著，内存访问时间在总时间中占比较大。这意味着程序的性能主要受限于内存系统的带宽和延迟，是<strong>访存密集型 (Memory-Bound)</strong>。</li>
+</ul>
+<p>因此，提高计算强度 <code>q</code>，可以使程序的实际执行时间更接近理想的计算时间，从而提升性能。</p>
+<h4 id="提升计算强度的策略预览">提升计算强度的策略预览</h4>
+<p>既然提高计算强度如此重要，那么有哪些策略可以实现这一目标呢？从计算强度的定义 <code>q = f<sub>ops</sub> / m<sub>data</sub></code> 来看，提升 <code>q</code> 无非两种途径：或者增加分子 <code>f<sub>ops</sub></code>（在解决相同问题的前提下，这通常较难，除非改变算法复杂度），或者<strong>减小分母 <code>m<sub>data</sub></code></strong>（即减少对慢速内存的访问量）。后者是实践中更常用的优化思路。</p>
+<p>课程（<a href="#ref_lecture02" target="_blank">HUST-USYD Lecture 2</a>）中提到的主要策略包括：</p>
+<ul>
+<li><strong>减少缓存未命中率 (Reduce Cache Miss Rate)</strong>，从而减少对慢速主内存的实际访问次数：
+                <ul>
+<li><strong>利用连续内存访问 (Contiguous Memory Access)</strong>：通过按数据在内存中的存储顺序访问数据，可以更好地利用缓存行的空间局部性，一次加载多个有用的数据项。</li>
+<li><strong>分块 (Blocking / Tiling)</strong>：将大的数据集划分为能完全装入缓存的小块，对每个小块进行集中处理，以最大化数据在缓存中的复用，减少数据在不同内存层级间的来回移动。</li>
+</ul>
+</li>
+<li><strong>高效利用寄存器 (Make Efficient Use of Registers)</strong>：寄存器是内存层级中最快的存储。通过将频繁使用的数据加载到寄存器中，并在寄存器中完成尽可能多的计算，可以显著减少对缓存乃至主内存的访问。
+                <ul>
+<li><strong>循环展开 (Loop Unrolling)</strong>：常常与寄存器优化结合使用。展开循环体可以暴露更多的独立操作，使得编译器或程序员能够更有效地将中间变量分配到寄存器，并重用加载到寄存器中的数据。</li>
+</ul>
+</li>
+</ul>
+<p>这些策略的核心思想都是尽可能让数据在更快的存储层级中停留更久（时间局部性），或者一次性加载更多有用的数据（空间局部性），并确保加载到快速存储的数据被充分计算和复用。我们将在后续章节中详细探讨这些技术的具体实现和效果。</p>
+<div class="key-takeaways">
+<h4>计算强度关键要点</h4>
+<ul>
+<li>计算强度 (q) 定义为算术运算次数与慢速内存访问量之比 (<code>f<sub>ops</sub> / m<sub>data</sub></code>)。</li>
+<li>高计算强度意味着程序能有效利用计算资源，可能为计算密集型；低计算强度则可能受限于内存带宽，为访存密集型。</li>
+<li>程序性能与计算强度的关系可用模型 T<sub>actual</sub> = T<sub>ideal</sub> × (1 + (1/q) × (t<sub>m</sub>/t<sub>f</sub>)) 描述。</li>
+<li>提升计算强度的主要策略是减少对慢速内存的访问，例如通过优化缓存使用（连续访问、分块）和高效利用寄存器（循环展开）。</li>
+</ul>
+</div>
+</section>
+<hr/>
+<section id="性能调优利器矩阵乘法优化">
+<h2>性能调优利器：矩阵乘法优化</h2>
+<p>矩阵乘法是科学与工程计算中最为基础和常见的运算之一，广泛应用于线性代数、图像处理、机器学习（尤其是神经网络）、物理模拟等诸多领域。由于其计算量巨大且具有规则的访存模式，它成为了研究和展示各种性能优化技术的绝佳“试验场”。</p>
+<h3 id="矩阵乘法一个经典的优化试验场">矩阵乘法：一个经典的优化试验场</h3>
+<p>对于两个 N×N 的矩阵 A 和 B，其乘积 C = A × B 的计算需要进行 N<sup>3</sup> 次乘法和 N<sup>3</sup> 次加法操作，总的算术运算量是 O(N<sup>3</sup>) 级别。同时，它需要读取 2N<sup>2</sup> 个输入元素（矩阵A和B），并写入 N<sup>2</sup> 个输出元素（矩阵C）。</p>
+<p>尽管矩阵乘法本身具有较高的潜在计算量，但其朴素（未经优化）的实现版本在现代计算机上的性能往往远未达到硬件的理论峰值。这主要是因为朴素实现未能充分考虑计算机的内存层次结构特性，导致缓存利用率低下，程序大部分时间消耗在等待数据从慢速内存加载到CPU。因此，对矩阵乘法进行优化，不仅能带来实际应用中的显著性能提升，也是学习和理解内存访问优化、数据复用等关键性能工程技术的经典案例。</p>
+<h3 id="基础实现-naive-ijk-与瓶颈剖析">基础实现 (Naive ijk) 与瓶颈剖析</h3>
+<p>最广为人知的矩阵乘法实现方式是使用三层嵌套循环。根据内外循环变量的不同，可以有 <code>3! = 6</code> 种不同的排列顺序。我们首先分析最常见的 <code>ijk</code> 版本：</p>
+<pre><code class="language-c">// 代码示例 2.1: 基础矩阵乘法 (ijk 版本)
+// 假设矩阵A, B, C均为 N x N，已正确分配和初始化
+// C[i][j] = C[i][j] + A[i][k] * B[k][j] (通常 C 初始化为0)
+void matrix_multiply_ijk(double** C, double** A, double** B, int N) {
+    for (int i = 0; i &lt; N; i++) {       // 外层循环 (行)
+        for (int j = 0; j &lt; N; j++) {   // 中层循环 (列)
+            double sum = 0.0;           // 用于累加 C[i][j] 的值
+            for (int k = 0; k &lt; N; k++) { // 内层循环 (点积元素)
+                sum += A[i][k] * B[k][j];
+            }
+            C[i][j] = sum;
+        }
+    }
+}
+// 注意：在讲义中，通常表达为 C(i,j) = C(i,j) + A(i,k) * B(k,j)。
+// 为了减少写回主存的开销，累加通常在寄存器变量 (如 sum) 中进行，
+// 最后一次性写入 C[i][j]。
+</code></pre>
+<p><strong>代码说明 2.1</strong>: 这是标准的 <code>ijk</code> 循环顺序矩阵乘法。对于 C 语言（以及C++, Java等）中常用的行主序 (row-major order) 存储方式（即二维数组的同一行元素在内存中是连续存放的），我们来分析其访存模式：</p>
+<ul>
+<li><strong>矩阵 A (<code>A[i][k]</code>)</strong>: 在最内层 <code>k</code> 循环中，随着 <code>k</code> 的变化，<code>A[i][k]</code> 是按行访问的。这是<strong>连续访问</strong>，对缓存友好，空间局部性好。</li>
+<li><strong>矩阵 B (<code>B[k][j]</code>)</strong>: 在最内层 <code>k</code> 循环中，当 <code>j</code> 固定，<code>k</code> 变化时，<code>B[k][j]</code> 是按列访问的 (即访问 <code>B[0][j], B[1][j], ..., B[N-1][j]</code>)。在行主序存储下，这意味着每次访问的元素在内存中相隔 N 个元素（即一行）。这是<strong>非连续访问</strong>，对缓存极不友好，空间局部性差。每次访问 <code>B[k][j]</code> 都可能导致缓存未命中，需要加载一个新的缓存行，而该缓存行中其他大部分数据对当前的内循环可能无用。</li>
+<li><strong>矩阵 C (<code>C[i][j]</code>)</strong>: 在 <code>j</code> 循环中按行写入，<code>sum</code> 变量通常会被编译器优化到寄存器中，内层 <code>k</code> 循环结束后才写回 <code>C[i][j]</code> (或累加到 <code>C[i][j]</code> 如果 C 参与累加)。这个访问模式本身是比较理想的。</li>
+</ul>
+<p><strong>瓶颈剖析</strong>：</p>
+<p>主要的性能瓶颈在于对矩阵 B 的列式访问。由于这种访问模式与行主序存储方式的冲突，导致缓存利用效率极低。每一次内循环（k循环）计算 C 的一个元素时，A 的一行元素和 B 的一列元素被访问。A 的行可以很好地利用缓存，但 B 的列元素在内存中是跳跃的。如果 N 很大，B 的一列元素可能跨越多个缓存行，并且这些缓存行在被充分利用前就可能被其他数据替换出去。</p>
+<p><strong>计算强度分析 (ijk 版本)</strong> (依据<a href="#ref_lecture02" target="_blank">HUST-USYD Lecture 2</a>的简化分析)：</p>
+<ul>
+<li>算术运算次数 (<code>f<sub>ops</sub></code>): <code>2N<sup>3</sup></code> (N<sup>3</sup> 次乘法和 N<sup>3</sup> 次加法)。</li>
+<li>慢速内存访问 (<code>m</code>，假设最坏情况，即快速内存很小，不足以容纳B的一列或A的一行)：
+                    <ul>
+<li>读取 A 的每一行 N 次：总共 <code>N × N<sup>2</sup> = N<sup>3</sup></code> 次元素读取。</li>
+<li>读取 B 的每一列 N 次：总共 <code>N × N<sup>2</sup> = N<sup>3</sup></code> 次元素读取。</li>
+<li>读取和写入 C 的每个元素一次：总共 <code>2N<sup>2</sup></code> 次元素访问。</li>
+</ul>
+                    讲义给出的更细致的分析是：
+                    <ul>
+<li>为计算C(i,j)：A(i,:) 被读一次。外层循环i,j，所以A的每行被读N次。总共 N * N = N<sup>2</sup>个元素，每个元素被读N次 = N<sup>3</sup>。 (如果A的一行能放入cache，则读到A的次数是 N<sup>2</sup>)。</li>
+<li>为计算C(i,j)：B(:,j) 被读一次。外层循环i,j，所以B的每列被读N次。总共 N * N = N<sup>2</sup>个元素，每个元素被读N次 = N<sup>3</sup>。(B的一列很可能不连续且不能完全放入cache)。</li>
+<li>C(i,j) 读写各1次，是2N<sup>2</sup>。</li>
+</ul>
+                   讲义中对ijk的分析 m<sub>refs</sub> = n<sup>3</sup> (B) + n<sup>2</sup> (A) + 2n<sup>2</sup> (C)。这里假设A的一行能放入cache。
+                   则 m ≈ N<sup>3</sup> (对B的糟糕访问) + N<sup>2</sup> (对A的良好访问) + 2N<sup>2</sup> (对C的良好访问)。
+                   因此，总的慢速内存访问次数约为 <code>N<sup>3</sup> + 3N<sup>2</sup></code> (以元素为单位)。
+                </li>
+<li>计算强度 (<code>q</code>): <code>q = f<sub>ops</sub> / m ≈ 2N<sup>3</sup> / (N<sup>3</sup> + 3N<sup>2</sup>) ≈ 2</code> (对于较大的N)。</li>
+</ul>
+<p>计算强度为常数2，这是一个相对较低的值，意味着性能很容易受限于内存带宽。理想情况下，矩阵乘法中的数据（3N<sup>2</sup>个元素）如果能全部装入快速内存，计算强度可以达到 <code>2N<sup>3</sup> / (3N<sup>2</sup>) = (2/3)N</code>，这要高得多。这表明朴素的 <code>ijk</code> 版本有巨大的优化空间。</p>
+<h3 id="核心优化策略一循环顺序变换-loop-order-transformation-与连续内存访问">核心优化策略一：循环顺序变换 (Loop Order Transformation) 与连续内存访问</h3>
+<p>由于矩阵乘法的加法和乘法运算满足结合律和交换律，三层循环的顺序可以任意调换（例如 <code>ikj</code>, <code>jik</code>, <code>jki</code>, <code>kij</code>, <code>kji</code>）而不影响最终的计算结果。不同的循环顺序会导致截然不同的内存访问模式，从而显著影响缓存性能。</p>
+<p><strong><code>ikj</code> 版本分析</strong> (参考<a href="#ref_lecture02" target="_blank">HUST-USYD Lecture 2</a>中性能提升最明显的版本之一)：</p>
+<pre><code class="language-c">// 代码示例 2.2: 矩阵乘法 (ikj 版本)
+void matrix_multiply_ikj(double** C, double** A, double** B, int N) {
+    for (int i = 0; i &lt; N; i++) {
+        for (int k = 0; k &lt; N; k++) {       // k 循环提前了
+            double r = A[i][k];             // A[i][k] 在最内层 j 循环中是常量
+            for (int j = 0; j &lt; N; j++) {
+                // 假设 C 初始化为0，否则第一次应为 C[i][j] = r * B[k][j]
+                // 若 C 已有值，则 C[i][j] += r * B[k][j];
+                C[i][j] += r * B[k][j]; 
+            }
+        }
+    }
+}
+</code></pre>
+<p><strong>代码说明 2.2</strong>: 在 <code>ikj</code> 版本中：</p>
+<ul>
+<li><strong>矩阵 A (<code>A[i][k]</code>)</strong>: 在 <code>k</code> 循环中，对于固定的 <code>i</code>，<code>A[i][k]</code> 也是按行访问的。取出的 <code>A[i][k]</code> (变量 <code>r</code>) 会在整个内层 <code>j</code> 循环中被重复使用 N 次。如果 <code>r</code> 能存入寄存器，这是非常高效的。</li>
+<li><strong>矩阵 B (<code>B[k][j]</code>)</strong>: 在最内层 <code>j</code> 循环中，当 <code>k</code> 固定时，<code>B[k][j]</code> 随着 <code>j</code> 的变化而按行访问 (即 <code>B[k][0], B[k][1], ..., B[k][N-1]</code>)。这是<strong>连续访问</strong>，对缓存友好，空间局部性好。</li>
+<li><strong>矩阵 C (<code>C[i][j]</code>)</strong>: 在最内层 <code>j</code> 循环中，<code>C[i][j]</code> 也是按行访问并累加。这也是<strong>连续访问</strong>，对缓存友好。</li>
+</ul>
+<p><strong>性能提升原因</strong>：<code>ikj</code> (以及类似的如 <code>kij</code>) 版本通过改变循环顺序，使得对矩阵 B 和 C 的访问都变成了行优先的连续访问，这大大提高了缓存的利用率。特别是，B 的一行元素 <code>B[k][*]</code> 被加载到缓存后，可以被内层 <code>j</code> 循环完整地使用来更新 C 的一行中的所有元素 <code>C[i][*]</code>（与 <code>A[i][k]</code> 相乘后累加）。</p>
+<p><strong>计算强度分析 (<code>ikj</code> 版本)</strong> (依据<a href="#ref_lecture02" target="_blank">HUST-USYD Lecture 2</a>)：</p>
+<p>假设缓存行大小为 L 个元素（例如 L 个 double）。</p>
+<ul>
+<li>算术运算次数 (<code>f<sub>ops</sub></code>): 仍然是 <code>2N<sup>3</sup></code>。</li>
+<li>慢速内存访问 (<code>m</code>):
+                    <ul>
+<li>矩阵 A: 每个元素 <code>A[i][k]</code> 被读取一次。总共 <code>N<sup>2</sup></code> 次元素读取。</li>
+<li>矩阵 B: 每一行 <code>B[k][*]</code> 被读取 N 次 (因为外层 i 循环)。由于是按行访问，每读取一行 (N个元素) 发生 <code>N/L</code> 次缓存行加载。总共 <code>N × (N × N/L) = N<sup>3</sup>/L</code> 次慢速内存字读取 (更精确地是 N 行，每行读入 N/L 次cache line，被读 N 次，总共 N * N * (N/L) 次访问 → N<sup>2</sup> × (N/L) = N<sup>3</sup>/L 次元素（按字算）)。讲义简化为 <code>N<sup>2</sup> * N/L = N<sup>3</sup>/L</code>。 lecture02_2024 中 <code>m = n^2 (A) + n^2 * (n/L) (B) + 2n * (n/L) * n (C) --&gt; error, text is: n^2 for A, n * (n/L) for B read n times, C read/write n times per row, n rows.</code>
+                        讲义公式为：m = N<sup>2</sup> (A) + N × N × (N/L) (B被读N次，每次读一行) + 2 × N × (N/L) (C每行读写各一次)。
+                        简化后为: m ≈ N<sup>2</sup> (A) + N<sup>3</sup>/L (B) + 2N<sup>2</sup>/L (C)。
+                        总的慢速内存访问次数约为 <code>N<sup>2</sup> + N<sup>3</sup>/L + 2N<sup>2</sup>/L</code>。
+                        </li>
+</ul>
+</li>
+<li>计算强度 (<code>q</code>): <code>q = f<sub>ops</sub> / m ≈ 2N<sup>3</sup> / (N<sup>3</sup>/L) ≈ 2L</code> (对于较大的N，N<sup>3</sup>/L 项占主导)。</li>
+</ul>
+<p>这里的 L 是缓存行可以容纳的元素数量。例如，如果一个缓存行是64字节，一个double是8字节，则 L=8。计算强度从常数2提升到了 <code>2L</code>，这是一个与缓存行大小相关的倍数提升，通常能带来几倍的性能改进。这就是**连续内存访问 (Contiguous Memory Access)** 的威力：当程序顺序访问内存中连续存放的数据时，可以最大化利用缓存行，显著减少缓存未命中的次数。</p>
+<p>课程中的 <code>Lab exercise 1</code> 就是要求学生通过修改循环顺序来比较不同版本矩阵乘法的性能，直观感受这一优化带来的效果。</p>
+<h3 id="核心优化策略二分块技术-blockingtiling">核心优化策略二：分块技术 (Blocking/Tiling)</h3>
+<p>尽管改变循环顺序（如采用 <code>ikj</code>）可以改善缓存对行访问的利用，但当矩阵非常大，以至于单行数据（例如 B 的一行或 C 的一行）都无法完全或长时间保留在缓存中时（尤其是在多核共享L3缓存或更小的L1/L2缓存中），或者当A的元素也不能很好地在缓存中复用时，性能仍然会受限。<strong>分块 (Blocking 或 Tiling)</strong> 技术通过将大矩阵划分为更小的、能够完全装入缓存的子矩阵（块），并对这些子块进行操作，从而进一步提高数据在缓存中的复用率。</p>
+<p><strong>原理</strong>：</p>
+<p>分块的基本思想是将原始的 N×N 矩阵 A, B, C 逻辑上划分为由 b×b 大小的子块构成的新矩阵 (共有 (N/b)×(N/b) 个子块)。整个矩阵乘法就变成了对这些子块进行的矩阵乘法和累加：</p>
+<p style="text-align:center;"><code>C<sub>IJ</sub> = ∑<sub>K</sub> (A<sub>IK</sub> × B<sub>KJ</sub>)</code></p>
+<p>其中 <code>I, J, K</code> 是块的索引，<code>A<sub>IK</sub></code>, <code>B<sub>KJ</sub></code>, <code>C<sub>IJ</sub></code> 都是 b×b 的子矩阵。关键在于，当我们计算一个子块 <code>C<sub>IJ</sub></code> 时，我们会加载对应的子块 <code>A<sub>IK</sub></code> 和 <code>B<sub>KJ</sub></code> 到缓存中。由于这些子块足够小 (<code>3 × b<sup>2</sup></code> 个元素所需的存储空间小于缓存大小)，它们可以在缓存中被反复使用，直到完成所有 b<sup>3</sup> 级别的内部乘加运算。这极大地提高了时间局部性。</p>
+<figure>
+<img alt="矩阵乘法分块示意图" src="https://picture-search.tiangong.cn/image/doc/0c82737eedf69d950e4835b3e82cb156.jpg"/>
+<figcaption>图 2.2: 矩阵乘法分块示意图 (改编自 <a href="#ref_lecture02" target="_blank">HUST-USYD Lecture 2</a>)。图中展示了将大矩阵分解为小块进行计算的思想。目标是让当前活跃的三个小块 A<sub>IK</sub>, B<sub>KJ</sub>, C<sub>IJ</sub> 能够完全放入高速缓存中。</figcaption>
+</figure>
+<p><strong>伪代码示例 (分块)</strong> (改编自<a href="#ref_lecture02" target="_blank">HUST-USYD Lecture 2</a>)：</p>
+<pre><code class="language-c">// 代码示例 2.3: 分块矩阵乘法 (概念性伪代码)
+// N: 矩阵维度, b: 块大小 (block size)
+void matrix_multiply_blocked(double** C, double** A, double** B, int N, int b) {
+    // 假设 C 已经初始化为 0
+    for (int ii = 0; ii &lt; N; ii += b) {         // 遍历 C 的行块
+        for (int jj = 0; jj &lt; N; jj += b) {     // 遍历 C 的列块
+            // {读取块 C(ii,jj) 到快速内存} // 实际上是累加，所以可能已在快速内存
+            for (int kk = 0; kk &lt; N; kk += b) { // 遍历 A 的列块 / B 的行块
+                // {读取块 A(ii,kk) 到快速内存}
+                // {读取块 B(kk,jj) 到快速内存}
+                
+                // 对子块进行标准矩阵乘法: C(ii,jj) += A(ii,kk) * B(kk,jj)
+                // 注意循环边界处理，当 N 不是 b 的整数倍时
+                for (int i = ii; i &lt; min(ii + b, N); i++) {
+                    for (int j = jj; j &lt; min(jj + b, N); j++) {
+                        double sum_block_element = 0; // 如果C(i,j)不是第一次被写
+                                                      // 这应该基于 C[i][j] 的现有值
+                                                      // 讲义中是 C(i,j) = C(i,j) + ...
+                                                      // 因此 C[i][j] 会被反复读写
+                                                      // 更优化的版本会将 C(i,j)的一个块的累加值保留在寄存器或L1中
+                        for (int k = kk; k &lt; min(kk + b, N); k++) {
+                             C[i][j] += A[i][k] * B[k][j]; // 这是最内层计算
+                        }
+                    }
+                }
+            }
+            // {将块 C(ii,jj) 写回慢速内存} // 如果C的块在快速内存中累加
+        }
+    }
+}
+// min(val, N) 是为了处理 N 不是 b 的整数倍的情况
+// int min(int x, int y) { return x &lt; y ? x : y; }
+</code></pre>
+<p><strong>计算强度分析 (分块版本)</strong> (依据<a href="#ref_lecture02" target="_blank">HUST-USYD Lecture 2</a>)：</p>
+<ul>
+<li>算术运算次数 (<code>f<sub>ops</sub></code>): 仍然是 <code>2N<sup>3</sup></code>。</li>
+<li>慢速内存访问 (<code>m</code>):
+                    <ul>
+<li>共有 <code>(N/b)<sup>3</sup></code> 个块乘法发生。</li>
+<li>每次块乘法 <code>A<sub>IK</sub> × B<sub>KJ</sub></code>，需要从主存加载 <code>A<sub>IK</sub></code> 和 <code>B<sub>KJ</sub></code> (各 <code>b<sup>2</sup></code> 元素)，并将结果累加到 <code>C<sub>IJ</sub></code> (一个 <code>b<sup>2</sup></code> 的块，可能需要读写)。</li>
+<li>矩阵 A：总共 <code>N/b</code> 行块，每行块 <code>N/b</code> 个块。每个 <code>A<sub>IK</sub></code> 块被读取 <code>N/b</code> 次 (对应 <code>jj</code> 循环)。总读取元素数约为 <code>(N/b) × (N<sup>2</sup>) = N<sup>3</sup>/b</code>。</li>
+<li>矩阵 B：同理，每个 <code>B<sub>KJ</sub></code> 块被读取 <code>N/b</code> 次 (对应 <code>ii</code> 循环)。总读取元素数约为 <code>(N/b) × (N<sup>2</sup>) = N<sup>3</sup>/b</code>。</li>
+<li>矩阵 C： 每个 <code>C<sub>IJ</sub></code> 块被读写一次（在外层 <code>kk</code> 循环中累加完成）。总共 <code>2N<sup>2</sup></code> 次元素访问。</li>
+<li>总的慢速内存访问元素数约为 <code>m ≈ 2N<sup>3</sup>/b + 2N<sup>2</sup></code>。</li>
+</ul>
+</li>
+<li>计算强度 (<code>q</code>): <code>q = f<sub>ops</sub> / m ≈ 2N<sup>3</sup> / (2N<sup>3</sup>/b + 2N<sup>2</sup>) ≈ b</code> (对于较大的N，且 <code>b &lt;&lt; N</code>)。</li>
+</ul>
+<p>计算强度从 <code>2L</code> (对于循环变换) 提高到了 <code>b</code> (块大小)。只要我们选择的块大小 <code>b</code> 使得三个 <code>b×b</code> 的子块（即 <code>3b<sup>2</sup></code> 个元素）能够舒适地放入缓存，并且 <code>b &gt; 2L</code>，那么分块技术就能带来比单纯循环变换更大的性能提升。通常 <code>b</code> 的值可以达到几十甚至上百（取决于缓存大小）。例如，如果 L1缓存能放下 3 * 60 * 60 * 8 bytes = 86.4KB，那么b可以取60左右。此时计算强度能达到约60，远高于之前的2L (如 L=8, 2L=16)。</p>
+<p><strong>选择合适的块大小 (<code>b</code>)</strong> 是分块优化的关键。它依赖于特定机器的缓存大小（L1, L2, L3）、缓存组织方式以及元素大小。<code>b</code> 太小，则分块的额外循环开销可能抵消数据复用的好处；<code>b</code> 太大，则子块无法完全装入缓存，数据复用效果下降。通常需要通过实验来调整 <code>b</code> 以获得最佳性能。</p>
+<div class="key-takeaways">
+<h4>矩阵乘法优化关键要点</h4>
+<ul>
+<li>朴素 <code>ijk</code> 矩阵乘法因对B的列访问导致缓存效率低下，计算强度约为2。</li>
+<li><strong>循环顺序变换</strong> (如 <code>ikj</code>) 通过将对B和C的访问改为行优先，利用连续内存访问，将计算强度提升至约<code>2L</code> (L为缓存行元素数)。</li>
+<li><strong>分块 (Blocking)</strong> 技术将大矩阵分解为能装入缓存的小块进行操作，通过最大化块内数据复用，可将计算强度提升至约 <code>b</code> (块边长)。</li>
+<li>选择合适的块大小 <code>b</code> 对于分块技术的性能至关重要，需考虑缓存容量。</li>
+<li>这些优化技术的核心都是改善数据局部性，提高缓存命中率，从而提升计算强度。</li>
+</ul>
+</div>
+</section>
+<hr/>
+<section id="性能调优利器循环展开-loop-unrolling">
+<h2>性能调优利器：循环展开 (Loop Unrolling)</h2>
+<p><em>循环展开</em><sup><a href="#fn3" id="ref3">3</a></sup> (Loop Unrolling) 是一种编译器和程序员都广泛采用的性能优化技术。其核心思想是在单次循环迭代中执行原本需要多次迭代才能完成的工作量，以此来减少循环控制本身的开销，并为其他更深层次的优化（如指令级并行）创造条件。</p>
+<h3 id="循环展开技术原理详解">循环展开技术原理详解</h3>
+<p>循环展开的基本操作是：选择一个循环，将其循环体复制 <code>k</code> 次（<code>k</code> 称为<strong>展开因子 (Unroll Factor)</strong>），然后将循环的迭代变量的增量改为原来的 <code>k</code> 倍，同时将循环的总迭代次数减少到原来的 <code>1/k</code>。如果原始循环次数不是 <code>k</code> 的整数倍，通常还需要一个额外的“扫尾”循环来处理剩余的迭代。</p>
+<p>循环展开主要通过以下几个方面提升性能：</p>
+<ol>
+<li><strong>减少循环控制开销 (Reduction of Branch Penalty)</strong>:
+                    <ul>
+<li>每个循环迭代都伴随着循环条件的判断和可能的跳转指令（分支指令）。这些指令本身会消耗CPU周期。通过循环展开，总的迭代次数减少了，因此这些循环控制指令的执行次数也相应减少。</li>
+<li>现代CPU通常采用分支预测来减少分支指令带来的流水线停顿。但如果预测失败，就会导致“分支惩罚 (Branch Penalty)”，即需要丢弃已错误执行的指令并重新填充流水线。循环展开减少了分支指令的数量，从而也可能降低分支预测失败的概率和总的分支惩罚。课程资料中称其为 “reduction of branch penalty, i.e., reduce instructions that control the loop, such as pointer arithmetic and 'end of loop' tests on each iteration”。</li>
+</ul>
+</li>
+<li><strong>增加指令级并行性 (Instruction-Level Parallelism, ILP)</strong>:
+                    <ul>
+<li>展开后的循环体包含了更多原本分散在多次迭代中的独立计算指令。这为现代CPU的超标量 (superscalar) 执行（即在一个时钟周期内发射多条指令）和乱序执行 (out-of-order execution) 提供了更大的空间。CPU可以同时执行这些独立的指令，从而更充分地利用其内部的多个功能单元，提高指令吞吐率。</li>
+</ul>
+</li>
+<li><strong>提高寄存器利用率和数据复用 (Efficient Use of Multiple Registers / Increase Computational Intensity)</strong>:
+                    <ul>
+<li>当循环体被展开后，原本在不同迭代中访问的数据如果可以在一次展开后的迭代中被共同处理，就可能将这些数据一次性加载到CPU的寄存器中。由于寄存器是内存层级中最快的存储部件，在寄存器中完成多次计算可以显著减少对缓存甚至主内存的访问次数。</li>
+<li>例如，如果原始循环是 <code>sum += a[i] * b[i]</code>，展开4次后可能变成处理 <code>a[i]*b[i]</code>, <code>a[i+1]*b[i+1]</code>, <code>a[i+2]*b[i+2]</code>, <code>a[i+3]*b[i+3]</code>。如果这些 <code>a</code> 和 <code>b</code> 的元素能被有效地加载到寄存器中，并在寄存器中完成乘加操作，就能提高计算强度（“load the data items into registers and then use many times” - <a href="#ref_lecture02" target="_blank">HUST-USYD Lecture 2</a>）。</li>
+</ul>
+</li>
+</ol>
+<p>简而言之，循环展开通过牺牲一定的代码体积（代码膨胀）来换取执行效率的提升。</p>
+<h3 id="代码示例循环展开的实践与应用">代码示例：循环展开的实践与应用</h3>
+<p>让我们通过几个例子来理解循环展开的具体应用。</p>
+<h4>简单示例：一维数组求和</h4>
+<p>假设我们要计算一个数组元素的总和：</p>
+<pre><code class="language-c">// 未展开版本
+long sum_array_basic(int* arr, int n) {
+    long sum = 0;
+    for (int i = 0; i &lt; n; i++) {
+        sum += arr[i];
+    }
+    return sum;
+}
+
+// 循环展开 (因子 k=4)
+long sum_array_unrolled(int* arr, int n) {
+    long sum = 0;
+    int i;
+    for (i = 0; i &lt;= n - 4; i += 4) { // 处理主要的块
+        sum += arr[i];
+        sum += arr[i+1];
+        sum += arr[i+2];
+        sum += arr[i+3];
+    }
+    for (; i &lt; n; i++) { // 处理剩余元素 (扫尾循环)
+        sum += arr[i];
+    }
+    return sum;
+}
+</code></pre>
+<p>在 <code>sum_array_unrolled</code> 函数中，主循环的迭代次数减少为约 <code>n/4</code>，每次迭代执行4次加法。这减少了循环判断和 <code>i</code> 的增量操作次数。</p>
+<h4>应用案例1：卷积 (Convolution)</h4>
+<p>课程讲义 (<a href="#ref_lecture02" target="_blank">HUST-USYD Lecture 2</a>) 中给出了一个卷积计算的例子。原始卷积计算如下：</p>
+<pre><code class="language-c">// 原始卷积 (假设 s 初始化为0)
+// s[i] = sum_{j=0 to L-1} (h[j] * a[i+j])
+// for (i = 0; i &lt;= N-L; i++)
+//     for (j = 0; j &lt; L; j++)
+//         s[i] += h[j] * a[i+j];
+</code></pre>
+<p>通过交换内外循环顺序得到：</p>
+<pre><code class="language-c">// 交换循环顺序后
+// for (j = 0; j &lt; L; j++)
+//     for (i = 0; i &lt;= N-L; i++)
+//         s[i] += h[j] * a[i+j];
+</code></pre>
+<p>然后对交换后的外层 <code>j</code> 循环进行展开 (展开因子=4)：</p>
+<pre><code class="language-c">// 代码示例 3.1: 卷积计算，j循环展开 (因子4)
+// (改编自 HUST-USYD Lecture 2)
+// Initialize s[i] = 0;
+float h0, h1, h2, h3; // 用于预加载 h 的元素到寄存器
+for (int j = 0; j &lt; L; j += 4) {
+    h0 = h[j]; 
+    h1 = h[j+1]; // 假设 L 总是4的倍数，或有边界处理
+    h2 = h[j+2]; 
+    h3 = h[j+3];
+    for (int i = 0; i &lt;= N - L; i++) {
+        s[i] += (h0 * a[i+j] + 
+                 h1 * a[i+j+1] +
+                 h2 * a[i+j+2] +
+                 h3 * a[i+j+3]);
+    }
+}
+// 如果 L 不能被4整除，需要扫尾循环处理剩余的 j
+</code></pre>
+<p><strong>代码说明 3.1</strong>: 这里将 <code>h[j]</code> 到 <code>h[j+3]</code> 预加载到浮点寄存器（由编译器决定，或通过内联汇编强制）<code>h0, h1, h2, h3</code> 中。这样，在内层的 <code>i</code> 循环中，这些 <code>h</code> 的值可以直接从快速的寄存器获取，而不是每次都从内存（或缓存）中读取。这有效地提高了数据复用，并增加了计算强度。</p>
+<h4>应用案例2：矩阵-向量乘法 (Matrix-Vector Multiplication)</h4>
+<p>对于计算 <code>y = y + A*x</code>，其中 A 是 n×n 矩阵，x, y 是 n 维向量。标准实现是：</p>
+<pre><code class="language-c">for (int i = 0; i &lt; n; i++) {
+    for (int k = 0; k &lt; n; k++) {
+        y[i] = y[i] + A[i][k] * x[k];
+    }
+}
+</code></pre>
+<p>课程讲义 (<a href="#ref_lecture02" target="_blank">HUST-USYD Lecture 2</a>) 展示了对 <code>i</code> 循环进行4次展开：</p>
+<pre><code class="language-c">// 代码示例 3.2: 矩阵-向量乘法，i循环展开 (因子4)
+// (改编自 HUST-USYD Lecture 2)
+// y = y + A*x
+void mat_vec_mul_unroll_i(double** A, double* x, double* y, int n) {
+    register double y0_reg, y1_reg, y2_reg, y3_reg; // 显式使用寄存器变量 (概念上)
+    register double xk_val;
+    int i;
+
+    for (i = 0; i &lt;= n - 4; i += 4) { // 展开因子为4
+        y0_reg = y[i]; 
+        y1_reg = y[i+1]; 
+        y2_reg = y[i+2]; 
+        y3_reg = y[i+3];
+        
+        for (int k = 0; k &lt; n; k++) {
+            xk_val = x[k]; // x[k] 在此内循环中被复用4次
+            y0_reg += A[i][k]   * xk_val;
+            y1_reg += A[i+1][k] * xk_val;
+            y2_reg += A[i+2][k] * xk_val;
+            y3_reg += A[i+3][k] * xk_val;
+        }
+        
+        y[i]   = y0_reg; 
+        y[i+1] = y1_reg; 
+        y[i+2] = y2_reg; 
+        y[i+3] = y3_reg;
+    }
+
+    // 处理剩余元素 (如果 n 不能被 4 整除)
+    for (; i &lt; n; i++) {
+        for (int k = 0; k &lt; n; k++) {
+            y[i] += A[i][k] * x[k];
+        }
+    }
+}
+</code></pre>
+<p><strong>代码说明 3.2</strong>: 这里，<code>y[i]</code> 到 <code>y[i+3]</code> 的累加值被分别存放在临时（希望是寄存器）变量 <code>y0_reg</code> 到 <code>y3_reg</code> 中。<code>x[k]</code> 在内层 <code>k</code> 循环的每一次迭代中，被加载一次后用于4次乘法运算。这样可以减少对 <code>y</code> 数组的重复内存访问和对 <code>x</code> 数组的重复加载。讲义中还提到，在对 <code>i</code> 循环展开后，可以进一步对内层的 <code>k</code> 循环进行展开（这是 <code>Lab exercise 2</code> 的内容），以期获得更好的性能，例如同时处理 <code>x[k]</code>, <code>x[k+1]</code> 等。</p>
+<p>处理边界条件（当循环总次数 <code>n</code> 不是展开因子 <code>k</code> 的整数倍时）非常重要，以确保算法的正确性。通常通过一个额外的、不展开的循环来处理剩余的迭代。</p>
+<h3 id="循环展开的优势考量与权衡">循环展开的优势、考量与权衡</h3>
+<p><strong>优势总结</strong>：</p>
+<ul>
+<li><strong>减少循环开销</strong>：降低了循环控制指令（如条件判断、跳转）的执行频率。</li>
+<li><strong>暴露指令级并行 (ILP)</strong>：为CPU的超标量和乱序执行提供了更多可并行执行的独立指令。</li>
+<li><strong>改善寄存器和缓存使用</strong>：通过在一次迭代中处理更多数据，可以更有效地利用寄存器存储中间结果和复用已加载的数据，减少对内存的访问，从而可能提高计算强度。</li>
+</ul>
+<p><strong>考量与权衡</strong>：</p>
+<ul>
+<li><strong>代码膨胀 (Code Bloat)</strong>：循环展开会增加程序的代码体积（目标代码大小）。如果展开过度，可能导致指令缓存 (I-Cache) 的命中率下降，反而影响性能。因为更大的代码体积意味着I-Cache可能无法容纳整个循环体，导致频繁从主存加载指令。</li>
+<li><strong>寄存器压力 (Register Pressure)</strong>：虽然循环展开旨在更好地利用寄存器，但如果展开因子过大，循环体内需要的临时变量（用于存储中间结果或预加载数据）可能会超过CPU可用的物理寄存器数量。这时，编译器可能不得不将一些变量“溢出”(spill) 到内存（通常是栈上），这会引入额外的内存访问，反而降低性能。</li>
+<li><strong>选择合适的展开因子 (Unroll Factor)</strong>：展开因子并非越大越好。最佳展开因子取决于具体的循环体复杂度、目标CPU架构（可用寄存器数量、流水线深度、功能单元数量等）以及缓存特性。通常较小的因子（如2, 4, 8）比较常见且有效。过大的展开因子往往收益递减甚至为负。确定最优因子通常需要通过实验和性能分析 (profiling)。</li>
+<li><strong>编译器的角色</strong>：现代编译器（如GCC, Clang, ICC）通常具备自动进行循环展开的优化能力（例如，在使用 <code>-O2</code>, <code>-O3</code> 或更高级别的优化选项时）。编译器会根据其内部的启发式模型来决定是否展开以及展开多少。手动进行循环展开有时可以提供比编译器更精细的控制，特别是在对特定硬件有深入了解或编译器无法做出最优判断时。然而，手动展开会增加代码的复杂性和维护难度，且可能不如编译器智能。</li>
+<li><strong>循环依赖性</strong>：循环展开的效果很大程度上取决于循环体内部操作之间的数据依赖性。如果后续操作严重依赖于前序操作的结果（循环携带依赖性，loop-carried dependencies），那么即使展开了，并行的潜力也有限。</li>
+</ul>
+<p>总之，循环展开是一种强大的优化技术，但需要审慎使用，并在具体应用中通过测试来验证其效果。</p>
+<div class="key-takeaways">
+<h4>循环展开关键要点</h4>
+<ul>
+<li>循环展开通过复制循环体、减少迭代次数来优化性能。</li>
+<li>主要优势包括：减少循环控制开销、增加指令级并行性、提高寄存器利用率和数据复用。</li>
+<li>考量因素：代码膨胀可能影响指令缓存，过度展开可能导致寄存器压力过大。</li>
+<li>选择合适的展开因子至关重要，并非越大越好，通常需要实验确定。</li>
+<li>现代编译器能自动进行循环展开，手动展开需权衡利弊。</li>
+<li>边界条件处理是确保正确性的关键。</li>
+</ul>
+</div>
+</section>
+<hr/>
+<section id="优化技术综合应用与实践">
+<h2>优化技术综合应用与实践</h2>
+<p>在高性能计算领域，通常不存在一劳永逸的“银弹”优化。单一优化技术可能只能解决问题的某个方面，而要实现显著的性能飞跃，往往需要将多种优化策略巧妙地组合起来，并辅以细致的实验和调试。这一过程更像是一门艺术与科学的结合。</p>
+<h3 id="结合多种优化技术11--2">结合多种优化技术：1+1 &gt; 2</h3>
+<p>前面我们分别探讨了内存访问优化（通过循环顺序变换、分块技术）和指令级优化（通过循环展开）。在实际应用中，这些技术并非孤立存在，而是可以且常常需要结合使用，以发挥协同效应，达到“1+1 &gt; 2”的性能提升效果。</p>
+<p>以我们反复讨论的<strong>矩阵乘法</strong>为例，一个高度优化的实现通常会综合运用多种技巧：</p>
+<ol>
+<li><strong>选择最佳的宏观循环顺序</strong>：例如，采用对缓存访问模式最友好的循环排列（如 <code>ikj</code> 或其变体）作为基础框架。</li>
+<li><strong>应用分块技术 (Blocking/Tiling)</strong>：将大矩阵分解为能够适配某一级缓存（如L1或L2）的小块。外层循环遍历这些块。</li>
+<li><strong>对块内计算进行优化</strong>：
+                    <ul>
+<li><strong>寄存器级分块/循环展开</strong>：在处理每个小块的矩阵乘法时 (<code>b×b</code> 的小矩阵相乘)，可以进一步应用循环展开。例如，可以展开计算子块结果元素 (如C的一个 <code>2×2</code> 或 <code>4×4</code> 的微内核) 的循环，使得A和B中的元素能够被加载到寄存器中，并在寄存器中进行多次复用。这也被称为寄存器阻塞 (register blocking)。</li>
+<li><strong>数据预取 (Prefetching)</strong>：在计算当前数据块的同时，利用CPU的预取指令，提前将下一个将要用到的数据块加载到缓存中，以隐藏内存访问延迟。</li>
+<li><strong>SIMD (Single Instruction, Multiple Data) 向量化</strong>：利用现代CPU提供的向量指令（如SSE, AVX, NEON），使得一条指令能够同时对多个数据元素执行相同的操作（例如，同时计算4个或8个浮点数的乘加）。循环展开有助于产生更适合向量化的代码模式。</li>
+</ul>
+</li>
+</ol>
+<p>课程中的 <code>Homework 1: matrix multiplication with loop unrolling</code> 就是一个很好的例子，它要求在之前优化的矩阵乘法基础上（可能已经包含了循环顺序调整或分块）进一步加入循环展开。这个过程需要考虑在哪一层循环进行展开、展开因子选多少，以及如何与现有的分块策略协同。</p>
+<p>需要注意的是，不同优化技术之间可能存在相互影响：</p>
+<ul>
+<li>分块大小的选择会影响块内计算的循环次数，从而影响循环展开的适用性和效果。</li>
+<li>循环展开可能增加寄存器压力，这与分块时考虑的块内数据是否能完全放入寄存器（或L1缓存）有关。</li>
+<li>过度优化某一局部可能导致其他部分的性能瓶颈更加突出，或者引入新的开销。</li>
+</ul>
+<p>因此，综合优化是一个迭代和权衡的过程，需要对算法特性、目标硬件架构以及各种优化技术的原理和副作用有深入的理解。</p>
+<h3 id="实验与调试性能优化的必经之路">实验与调试：性能优化的必经之路</h3>
+<p>理论分析为性能优化指明了方向，但程序的实际性能表现受到诸多复杂因素的影响，包括编译器行为、操作系统调度、具体的硬件微架构细节等。因此，<strong>任何性能优化最终都必须通过严谨的实验来验证其效果</strong>。</p>
+<p>进行性能测试和调试时，应遵循一些基本原则：</p>
+<ol>
+<li><strong>精确计时</strong>：使用高精度的计时函数（如C++的 <code>&lt;chrono&gt;</code> 库，或特定平台的API如 <code>clock_gettime</code>）来测量代码段的执行时间。</li>
+<li><strong>多次运行取平均/中位数</strong>：单次运行结果可能受到系统干扰。应运行程序多次，去除异常值后取平均时间或中位数，以获得更稳健的性能数据。</li>
+<li><strong>控制变量</strong>：每次只改变一个优化参数或策略，以便清晰地判断该改变带来的影响。</li>
+<li><strong>使用合适的编译选项</strong>：编译器本身就是强大的优化工具。在测试优化效果时，应使用与最终部署环境一致的优化级别（例如，<code>gcc -O2</code> 或 <code>gcc -O3</code>）。了解不同优化级别会启用哪些自动优化（如自动循环展开、函数内联等）也很重要。</li>
+<li><strong>性能分析工具 (Profilers)</strong>：利用性能分析工具（如Linux下的 <code>perf</code>, Intel的VTune Profiler, Valgrind的Callgrind/Cachegrind等）可以帮助定位程序的性能瓶颈（热点函数、高缓存未命中区域等），从而更有针对性地进行优化。这些工具可以提供CPU周期消耗、缓存未命中次数、分支预测错误率等详细信息。</li>
+<li><strong>数据可视化</strong>：将不同优化版本或不同参数设置下的性能数据绘制成图表（例如，性能随问题规模N的变化曲线，或随块大小、展开因子的变化曲线），可以更直观地比较和分析结果。课程作业中也经常要求“Draw figures or tables”。</li>
+<li><strong>确保正确性</strong>：在追求性能的同时，必须时刻保证优化后程序的计算结果与原始版本一致。引入测试用例和验证机制是必不可少的。</li>
+</ol>
+<p>课程中安排的 <code>Lab exercise 1</code>（矩阵乘法循环顺序）、<code>Lab exercise 2</code>（矩阵向量乘法与循环展开）以及 <code>Homework 1</code>（矩阵乘法与循环展开），其目的正是鼓励学生动手实践，通过修改代码、编译、运行、测试、分析结果的过程，亲身体验和理解这些优化技术如何工作，以及它们对性能的实际影响。这是一个不断试错、学习和积累经验的过程，也是成为一名优秀性能工程师的必经之路。</p>
+</section>
+<div class="key-takeaways">
+<h4>优化总结与实践关键要点</h4>
+<ul>
+<li>高性能通常源于多种优化技术的协同应用，而非单一技巧。</li>
+<li>以矩阵乘法为例，可结合循环顺序变换、分块、循环展开、向量化等。</li>
+<li>优化是一个迭代和权衡的过程，需综合考虑算法、硬件和技术副作用。</li>
+<li>实验是检验优化效果的唯一标准，需精确计时、多次运行、控制变量。</li>
+<li>善用编译器优化选项和性能分析工具 (Profilers) 指导优化方向。</li>
+<li>数据可视化有助于分析性能变化趋势。</li>
+<li>在所有优化过程中，确保计算结果的正确性是首要前提。</li>
+</ul>
+</div>
+<hr/>
+<section id="附录">
+<h2>附录</h2>
+<h3 id="关键术语表">A.1 关键术语表</h3>
+<dl>
+<dt><strong>内存层次结构 (Memory Hierarchy)</strong><sup><a href="#fn1_appendix" id="ref1_appendix">1</a></sup></dt>
+<dd>计算机为平衡访问速度、容量和成本而设计的多级存储系统，通常包括寄存器、多级缓存、主内存和辅助存储等。其设计目标是以接近最快存储器的速度，提供接近最大存储器的容量和成本效益。</dd>
+<dt><strong>数据局部性 (Data Locality)</strong></dt>
+<dd>程序在执行过程中，其内存访问模式倾向于集中在特定区域的现象。分为时间局部性（最近访问的数据很可能再次被访问）和空间局部性（一个数据被访问，其邻近数据也可能很快被访问）。它是缓存系统有效工作的基础。</dd>
+<dt><strong>缓存 (Cache)</strong></dt>
+<dd>位于CPU与主内存之间的一层或多层高速、小容量存储器，用于存放主内存中常用数据和指令的副本，以减少CPU访问主内存的延迟。</dd>
+<dt><strong>缓存行 (Cache Line / Cache Block)</strong></dt>
+<dd>缓存与主内存之间数据传输的最小单位。当发生缓存未命中时，整个缓存行的数据会被从主内存加载到缓存中。</dd>
+<dt><strong>缓存命中 (Cache Hit) / 缓存未命中 (Cache Miss)</strong></dt>
+<dd>CPU要访问的数据在缓存中找到称为“命中”，访问速度快；未找到称为“未命中”，需要从下一级存储调取，速度慢。</dd>
+<dt><strong>计算强度 (Computational Intensity)</strong><sup><a href="#fn2_appendix" id="ref2_appendix">2</a></sup></dt>
+<dd>算法或程序执行的算术运算次数与从慢速内存访问（或移动）的数据量之比。高计算强度意味着算法在每个加载到快速内存的数据上执行了大量计算，通常性能更好。</dd>
+<dt><strong>矩阵乘法优化 (Matrix Multiplication Optimization)</strong></dt>
+<dd>针对计算密集型的矩阵乘法运算，采用的一系列旨在提高其计算效率的技术，如改变循环顺序、分块、循环展开、使用向量指令等。</dd>
+<dt><strong>连续内存访问 (Contiguous Memory Access)</strong></dt>
+<dd>按照数据在内存中物理存储的顺序进行访问。这种访问模式能有效利用缓存的空间局部性，提高缓存命中率。</dd>
+<dt><strong>分块 (Blocking / Tiling)</strong></dt>
+<dd>一种优化技术，将大的数据集（如矩阵）分解成能够完全装入某一级缓存的小块（tiles或blocks），然后对这些小块进行集中处理，以最大化数据在缓存中的复用，减少对慢速内存的访问。</dd>
+<dt><strong>循环展开 (Loop Unrolling)</strong><sup><a href="#fn3_appendix" id="ref3_appendix">3</a></sup></dt>
+<dd>一种编译器或手动优化技术，通过在一次循环迭代中执行更多的工作（复制循环体内容），来减少循环控制本身的开销（如分支和索引计算），并可能暴露更多的指令级并行性。</dd>
+<dt><strong>指令级并行 (Instruction-Level Parallelism, ILP)</strong></dt>
+<dd>在单个处理器中，同时执行多条指令的能力。现代CPU通过流水线、超标量执行、乱序执行等技术来实现ILP。</dd>
+<dt><strong>并行编程 (Parallel Programming)</strong></dt>
+<dd>一种程序设计范式，允许多个计算任务或程序的多个部分同时在多个处理器、核心或计算节点上执行，以提高计算速度或处理更大规模的问题。</dd>
+</dl>
+<h3 id="推荐阅读参考资料">A.2 推荐阅读/参考资料</h3>
+<ol>
+<li><strong id="ref_lecture02">Zhou, Bing Bing. "HUST-USYD Summer School on Parallel Programming Practice – Lecture 2 (lecture02_2024)."</strong> School of Computer Science, University of Sydney. (<em>本笔记的主要参考来源，涵盖了大部分讨论的核心概念和示例代码。</em>)</li>
+<li>Bryant, Randal E., and David R. O'Hallaron. <em>Computer Systems: A Programmer's Perspective.</em> 3rd ed., Pearson, 2016. (<em>计算机系统底层知识的经典教材，对内存层次结构、链接、并发等有深入讲解。</em>)</li>
+<li>Hennessy, John L., and David A. Patterson. <em>Computer Architecture: A Quantitative Approach.</em> 6th ed., Morgan Kaufmann, 2017. (<em>计算机体系结构的权威著作，详细讨论了性能优化、内存系统、并行处理等高级主题。</em>)</li>
+<li><a href="https://blog.csdn.net/m0_72410588/article/details/132644291" target="_blank">CSDN博客：内存层次结构：Memory Hierarchy 详解</a> (<em>提供了对内存层次结构的额外图文解释。</em>)</li>
+<li><a href="https://zhuanlan.zhihu.com/p/438173915" target="_blank">知乎专栏：矩阵乘法&amp;优化方法 - CPU篇</a> (<em>关于矩阵乘法优化的更广泛讨论，包括一些本文未详述的技术。</em>)</li>
+<li><a href="https://developer.baidu.com/article/detail.html?id=3291284" target="_blank">百度开发者中心：编译器优化技巧：循环展开（Loop Unrolling）</a> (<em>对循环展开原理、应用场景及优缺点的补充说明。</em>)</li>
+</ol>
+</section>
+<div class="footnotes">
+<h4>脚注</h4>
+<ol>
+<li id="fn1"><strong>内存层次结构 (Memory Hierarchy)</strong>: 指计算机系统中按速度、容量和成本排列的多级存储设备，旨在以接近最快存储器的速度提供接近最大存储器的容量。<a href="#ref1" title="返回正文">↩</a></li>
+<li id="fn2"><strong>计算强度 (Computational Intensity)</strong>: 描述一个算法中算术运算次数与总内存访问（通常指慢速内存）次数或字节数的比例。高计算强度意味着算法在数据加载后进行了充分的计算。<a href="#ref2" title="返回正文">↩</a></li>
+<li id="fn3"><strong>循环展开 (Loop Unrolling)</strong>: 一种编译器优化技术，通过复制循环体代码并相应调整循环计数器，来减少循环的迭代次数。这可以降低循环控制的开销，并为其他优化（如指令调度）创造机会。<a href="#ref3" title="返回正文">↩</a></li>
+<li id="fn1_appendix"><strong>内存层次结构 (Memory Hierarchy)</strong>: 定义同上。<a href="#ref1_appendix" title="返回正文">↩</a></li>
+<li id="fn2_appendix"><strong>计算强度 (Computational Intensity)</strong>: 定义同上。<a href="#ref2_appendix" title="返回正文">↩</a></li>
+<li id="fn3_appendix"><strong>循环展开 (Loop Unrolling)</strong>: 定义同上。<a href="#ref3_appendix" title="返回正文">↩</a></li>
+</ol>
+</div>
+</div>
+</body>
+</html>
