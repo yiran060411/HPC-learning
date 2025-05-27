@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>悉尼大学计算机科学学习笔记：并行编程与算法设计</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+            :root {
+                --font-size-body: 16px;
+                --font-size-h5: 16px;       
+                --font-size-h4: 18px;    
+                --font-size-h3: 20px;     
+                --font-size-h2: 24px;    
+                --font-size-h1: 28px;    
+            }
+            body {
+                font-feature-settings: 'liga' off, 'clig' off;
+                font-family: "SF Pro";
+                font-size: var(--font-size-body);
+                color: #333B46;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 1.5; 
+                margin: 0 24px 0 24px; /* 上 右 下 左 */
+                padding: 0px;
+            }
+            .container {
+                max-width: 800px;
+                margin: 0px auto;
+                padding: 24px 40px;
+                background-color: #fff;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                border-radius: 8px;
+            }
+            .chart-container {
+                position: relative;
+                margin: 3em auto;
+                max-width: 500px;
+                height: 400px;
+                overflow: visible;
+                aspect-ratio: 7/5;}
+
+        
+        
+        h1, h2, h3, h4 {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #1a1a1a; /* Darker headings */
+            margin-top: 1.8em;
+            margin-bottom: 0.8em;
+            font-weight: 700;
+        }
+        h1 {
+            font-size: 2.6em; /* 36px */
+            border-bottom: 3px solid #007bff; /* Accent color border */
+            padding-bottom: 0.5em;
+            text-align: center; /* Centered title */
+            margin-bottom: 1.2em;
+        }
+        h2 {
+            font-size: 2em; /* 28px */
+            border-bottom: _2px solid #e9ecef; /* Lighter border for h2 */
+            padding-bottom: 0.4em;
+            margin-top: 2.5em;
+        }
+        h3 {
+            font-size: 1.6em; /* 24px */
+            color: #2c3e50; /* Slightly different color for h3 */
+        }
+        h4 {
+            font-size: 1.3em; /* 20px */
+            color: #34495e;
+        }
+        p {
+            font-size: 17px; /* Optimal reading size */
+            margin-bottom: 1.4em; /* More space between paragraphs */
+            text-align: justify; /* Justified text for a formal look */
+        }
+        ul, ol {
+            margin-bottom: 1.4em;
+            padding-left: 1.8em; /* More indent */
+        }
+        li {
+            margin-bottom: 0.6em;
+        }
+        blockquote {
+            border-left: 4px solid #007bff;
+            padding: 10px 20px; /* More padding in blockquote */
+            margin: 1.5em 0; /* More margin around blockquote */
+            background-color: #f1f8ff; /* Light blue background */
+            border-radius: 4px;
+            font-style: normal; /* Not italic by default, let content decide */
+        }
+        blockquote p {
+            margin-bottom: 0.5em;
+        }
+        blockquote footer {
+            font-size: 0.9em;
+            color: #555;
+            text-align: right;
+        }
+        code, pre {
+            font-family: 'Menlo', 'Monaco', 'Consolas', 'Courier New', monospace;
+            background-color: #e9ecef; /* Lighter code background */
+            padding: 0.2em 0.5em;
+            border-radius: 4px;
+            font-size: 0.9em;
+            border: 1px solid #ced4da; /* Subtle border for code */
+        }
+        pre {
+            padding: 1em 1.2em;
+            overflow-x: auto;
+            white-space: pre-wrap; /* Wrap long lines in pre */
+            word-wrap: break-word; /* Break words if necessary */
+        }
+        strong, b {
+            font-weight: 700; /* Standard bold */
+        }
+        em, i {
+            font-style: italic;
+        }
+        a {
+            color: #0056b3; /* Darker blue for links */
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+            color: #003d80; /* Even darker on hover */
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 1.5em auto; /* More margin for images */
+            border-radius: 6px; /* Rounded image corners */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); /* Subtle shadow for images */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5em;
+            font-size: 16px; /* Slightly larger table font */
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        th, td {
+            border: 1px solid #dee2e6; /* Standard table border color */
+            padding: 10px 14px; /* More padding in cells */
+            text-align: left;
+        }
+        th {
+            background-color: #f1f3f5; /* Lighter header for table */
+            font-weight: 600;
+        }
+        .chart-container {
+            width: 100%;
+            max-width: 650px; /* Slightly smaller max-width for charts */
+            height: 380px;
+            margin: 2.5em auto; /* More margin for charts */
+            padding: 15px;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            background-color: #fcfcfc;
+            aspect-ratio: 7/5;}
+        .key-points {
+            background-color: #e6f7ff; /* Light cyan */
+            border-left: 5px solid #17a2b8; /* Cyan border */
+            padding: 20px 25px;
+            margin: 2em 0;
+            border-radius: 6px;
+        }
+        .key-points h4 {
+            margin-top: 0;
+            color: #0c5460; /* Dark cyan */
+            font-size: 1.4em;
+        }
+        .key-points ul {
+            padding-left: 20px;
+            margin-bottom: 0;
+        }
+        .key-points li {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .formula {
+            font-family: 'Menlo', 'Monaco', 'Consolas', 'Courier New', monospace;
+            background-color: #f0f2f5;
+            padding: 12px 18px;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            text-align: center;
+            margin: 1.2em auto;
+            display: block;
+            width: fit-content;
+            font-size: 1.15em; /* Slightly larger formula font */
+            color: #202124;
+        }
+        .caption {
+            text-align: center;
+            font-style: italic;
+            color: #6c757d; /* Bootstrap's muted color */
+            margin-top: -1em;
+            margin-bottom: 2em;
+            font-size: 0.95em;
+        }
+        .term-definition {
+            background-color: #fff9e6; /* Light yellow */
+            border: 1px solid #ffe082; /* Yellow border */
+            padding: 10px 15px;
+            margin: 1em 0;
+            border-radius: 4px;
+        }
+        .term-definition strong {
+            color: #bf360c; /* Dark orange for term */
+        }
+        hr {
+            border: 0;
+            height: 1px;
+            background-color: #e0e0e0;
+            margin: 2.5em 0;
+        }
+    
+        .chart-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: contain;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>悉尼大学计算机科学学习笔记：并行编程与算法设计</h1>
+<p style="text-align: right; font-size: 0.9em; color: #777;"><i>笔记更新时间：2025-05-27</i></p>
+<p>本笔记基于悉尼大学 Bing Bing Zhou 副教授的《HUST-USYD Summer School on Parallel Programming Practice – Lecture 3》讲义 (<a href="lecture03_2024" target="_blank">lecture03_2024</a>) 整理而成，旨在为并行编程与算法设计的初学者提供一份详尽、易懂的学习参考。笔记内容结合了讲义核心知识点与必要的背景补充，力求深入浅出。</p>
+<h2>引言 / 课程概述</h2>
+<p>随着计算需求的日益增长，单核处理器的性能提升已遭遇瓶颈，并行计算已成为推动科学研究和工业应用发展的核心驱动力。本课程及笔记旨在引导学习者进入并行计算的世界，理解其基本原理，掌握核心设计方法，并能将其应用于实际问题的解决中。</p>
+<h4>学习目标：</h4>
+<ul>
+<li>深入理解并行编程的基本原理、核心概念（如加速比、效率、Amdahl定律）。</li>
+<li>掌握并行算法的通用设计流程与关键技术（如任务划分、通信同步、任务依赖图、数学结合律应用）。</li>
+<li>能通过高斯消元法等具体案例分析并行算法的实现与优化策略。</li>
+</ul>
+<h4>核心内容概要：</h4>
+<p>本笔记将系统梳理并行计算的性能评估指标，探讨如何衡量和预测并行化带来的效益。接着，将深入并行算法设计的两大阶段——机器无关与机器相关阶段，详细解析任务划分、通信与同步设计、任务分配与负载均衡等关键步骤。此外，笔记还将介绍如何利用任务依赖图和数学原理（如结合律）来发现和利用问题固有的并行性。最后，通过对经典数值计算方法——高斯消元法及其并行化挑战的分析，将理论知识与实践应用相结合。</p>
+<h4>笔记结构说明：</h4>
+<p>本笔记分为四大核心部分：</p>
+<ol>
+<li><strong>并行计算性能度量：</strong> 讨论为何追求并行以及如何量化并行带来的性能提升。</li>
+<li><strong>并行算法设计：</strong> 详细阐述从串行思维转向并行蓝图的通用设计过程和核心考量。</li>
+<li><strong>挖掘并行潜力：</strong> 介绍识别和增强算法并行性的常用工具和数学思想。</li>
+<li><strong>案例分析：高斯消元法：</strong> 以一个具体的数值算法为例，探讨其并行化面临的问题与解决思路。</li>
+</ol>
+<p>每部分均包含关键概念解析、逻辑结构梳理，并力求对专业术语给出初学者友好的解释。希望这份笔记能为您在并行计算领域的学习之旅提供有力的支持。</p>
+<hr/>
+<h2>第一部分：并行计算性能度量：为何与何如追求“快”？</h2>
+<p>并行计算的主要目标是获得高性能，即更快的计算速度。为了科学地评估并行化带来的效果，我们需要一系列的性能度量指标。本部分将重点介绍加速比、效率以及著名的阿姆达尔定律，并探讨影响并行性能的开销问题。</p>
+<h3>1.1 加速比 (Speedup) 与效率 (Efficiency)：衡量并行的“性价比”</h3>
+<p><strong>加速比 (Speedup, S)</strong> 是衡量并行算法相对于串行算法性能提升倍数的核心指标。它直接反映了并行策略的有效性。</p>
+<div class="formula">
+            S = T<sub>s</sub> / T<sub>p</sub>
+</div>
+<p>其中：</p>
+<ul>
+<li><code>T<sub>s</sub></code>：最优串行算法的执行时间，或者使用单个处理器执行待并行化算法的时间。</li>
+<li><code>T<sub>p</sub></code>：使用 <code>p</code> 个处理器执行并行算法的执行时间。</li>
+</ul>
+<p><strong>效率 (Efficiency, E)</strong> 则衡量了在并行计算中，处理器资源被有效利用的程度。它是加速比与所用处理器数量的比值，反映了并行带来的“性价比”。</p>
+<div class="formula">
+            E = S / p = T<sub>s</sub> / (p * T<sub>p</sub>)
+        </div>
+<p>理想情况下，如果我们使用 <code>p</code> 个处理器，我们期望速度能提升 <code>p</code> 倍 (<code>S = p</code>)，并且所有处理器都100%有效工作 (<code>E = 1</code>)。然而，在实际应用中，这通常难以实现。</p>
+<div class="chart-container" id="speedupChartContainer">
+<canvas id="speedupChart"></canvas>
+</div>
+<p class="caption">图1：理想加速比与实际加速比对比示意图。实际加速比通常低于理想情况，且增长可能放缓。</p>
+<script>
+            const speedupCtx = document.getElementById('speedupChart').getContext('2d');
+            new Chart(speedupCtx, {
+                type: 'line',
+                data: {
+                    labels: ['1', '2', '4', '8', '16', '32'], // Number of Processors (p)
+                    datasets: [{
+                        label: 'Ideal Speedup (S=p)',
+                        data: [1, 2, 4, 8, 16, 32],
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1,
+                        fill: false
+                    }, {
+                        label: 'Actual Speedup (Illustrative)',
+                        data: [1, 1.85, 3.5, 6.2, 10.5, 16.8], // Example data showing diminishing returns
+                        borderColor: 'rgb(255, 99, 132)',
+                        tension: 0.1,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Number of Processors (p)' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Speedup (S)' },
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '理想加速比 vs. 实际加速比'
+                        }
+                    }
+                }
+            });
+        </script>
+<p>实际效率 <code>E</code> 通常小于1，这意味着并非所有处理器时间都用于有效计算。导致这种现象（即 `E &lt; 1`）的主要原因包括：</p>
+<ul>
+<li><strong>进程/线程间的通信与同步开销：</strong> 并行任务需要协调，这会花费额外时间。</li>
+<li><strong>处理器间的负载不均衡：</strong> 如果任务分配不均，部分处理器可能提前空闲，而其他处理器仍在工作。</li>
+<li><strong>管理并行计算引入的额外工作：</strong> 如任务分解、结果合并等操作本身也需要时间。</li>
+<li><strong>算法本身固有的串行部分：</strong> 有些计算步骤天生无法并行。</li>
+</ul>
+<div class="term-definition">
+<p><strong>专业术语解释 (小白友好版):</strong></p>
+<ul>
+<li><strong><code>并行计算 (Parallel Computing)</code>：</strong> 想象一下，你有一大堆衣服要洗。串行计算就像你一个人一台洗衣机慢慢洗；并行计算就像你同时用好几台洗衣机（多个处理器）一起洗，希望能更快洗完。</li>
+<li><strong><code>串行算法 (Sequential Algorithm)</code>：</strong> 就是一步接一步执行的指令序列，像食谱一样，必须按顺序来。</li>
+<li><strong><code>处理器 (Processor)</code>：</strong> 计算机的“大脑”，负责执行计算任务。多处理器就像多个大脑同时工作。</li>
+<li><strong><code>开销 (Overhead)</code>：</strong> 在并行计算中，为了协调各个处理器工作（比如分配任务、汇总结果）所花费的额外时间，这些时间并没有直接用于解决问题本身，就像多个人一起做饭时，互相沟通商量也需要时间。</li>
+</ul>
+</div>
+<h3>1.2 阿姆达尔定律 (Amdahl's Law)：并行加速的理论“天花板”</h3>
+<p>阿姆达尔定律（Amdahl's Law）由计算机科学家吉恩·阿姆达尔（Gene Amdahl）在1967年提出 (<a href="https://www.cnblogs.com/uestc-mm/p/12874381.html" target="_blank">并行瓶颈计算之阿姆达尔定律</a>)，它揭示了在一个固定规模的问题中，通过增加处理器数量理论上可以达到的最大加速比。该定律明确指出，程序中固有的串行部分是并行加速的根本瓶颈。</p>
+<p>该定律基于以下假设：</p>
+<ul>
+<li><code>β</code>：程序中必须串行执行的部分所占的比例（相对于总的单处理器执行时间）。</li>
+<li><code>1 - β</code>：程序中可以完美并行化的部分所占的比例。</li>
+</ul>
+<p>设 <code>T<sub>s</sub></code> 为单处理器执行总时间，则使用 <code>p</code> 个处理器时的并行执行时间 <code>T<sub>p</sub></code> 可以表示为：</p>
+<div class="formula">
+            T<sub>p</sub> = β * T<sub>s</sub> + (1 - β) * T<sub>s</sub> / p
+        </div>
+<p>其中，<code>β * T<sub>s</sub></code> 是串行部分的执行时间，它不会因为处理器数量的增加而减少；<code>(1 - β) * T<sub>s</sub> / p</code> 是并行部分的执行时间，理想情况下它会随着处理器数量 <code>p</code> 的增加而线性减少。</p>
+<p>因此，阿姆达尔定律给出的加速比 <code>S</code> 公式为：</p>
+<div class="formula">
+            S = T<sub>s</sub> / T<sub>p</sub> = 1 / (β + (1 - β) / p) = p / (1 + β * (p - 1))
+        </div>
+<p>一个极其重要的推论是，当处理器数量 <code>p</code> 趋向于无穷大时，加速比的极限为：</p>
+<div class="formula">
+            S → 1 / β
+        </div>
+<p>这意味着，即使拥有无限多的处理器，程序的最大加速比也无法超过其串行部分所占比例的倒数。例如，如果一个程序有5_000000%的计算量必须串行执行 (<code>β = 0.05</code>)，那么无论使用多少处理器，其理论最大加速比也不可能超过 <code>1 / 0.05 = 20</code> 倍。这突显了优化程序串行部分对于提升整体并行性能的极端重要性。</p>
+<div class="chart-container" id="amdahlChartContainer">
+<canvas id="amdahlChart"></canvas>
+</div>
+<p class="caption">图2：阿姆达尔定律下不同串行比例(β)对应的加速比上限。可见串行比例越小，理论加速潜力越大。</p>
+<script>
+            const amdahlCtx = document.getElementById('amdahlChart').getContext('2d');
+            const processors = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024];
+            function calculateAmdahlSpeedup(p, beta) {
+                if (p === 0) return 0;
+                return p / (1 + beta * (p - 1));
+            }
+
+            const betas = [
+                { value: 0.01, label: 'β = 0.01 (1% Serial)', color: 'rgb(54, 162, 235)' }, // Blue
+                { value: 0.05, label: 'β = 0.05 (5% Serial)', color: 'rgb(255, 159, 64)' },// Orange
+                { value: 0.10, label: 'β = 0.10 (10% Serial)', color: 'rgb(75, 192, 192)' },// Green
+                { value: 0.25, label: 'β = 0.25 (25% Serial)', color: 'rgb(255, 99, 132)' } // Red
+            ];
+
+            const amdahlDatasets = betas.map(betaInfo => ({
+                label: betaInfo.label + ` (Max S ≈ ${ (1/betaInfo.value).toFixed(1) })`,
+                data: processors.map(p => calculateAmdahlSpeedup(p, betaInfo.value)),
+                borderColor: betaInfo.color,
+                tension: 0.1,
+                fill: false
+            }));
+
+            new Chart(amdahlCtx, {
+                type: 'line',
+                data: {
+                    labels: processors.map(String),
+                    datasets: amdahlDatasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Number of Processors (p)' },
+                            type: 'logarithmic', // Use logarithmic scale for processors to see wider range
+                             ticks: {
+                                callback: function(value, index, values) {
+                                    // Show labels for powers of 2 or specific points
+                                    const pValues = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024];
+                                    if (pValues.includes(parseInt(this.getLabelForValue(value)))) {
+                                        return this.getLabelForValue(value);
+                                    }
+                                    return null; 
+                                }
+                            }
+                        },
+                        y: {
+                            title: { display: true, text: 'Speedup (S)' },
+                            beginAtZero: true,
+                            // Suggested max can be dynamic based on smallest beta
+                            // max: 1 / Math.min(...betas.map(b => b.value)) + 5 
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Amdahl\'s Law: Speedup vs. Processors for different Serial Fractions (β)'
+                        }
+                    }
+                }
+            });
+        </script>
+<div class="term-definition">
+<p><strong>专业术语解释 (小白友好版):</strong></p>
+<ul>
+<li><strong><code>串行部分 (Sequential Part)</code>：</strong> 程序中那些必须按顺序执行，不能拆分开来让多个处理器同时做的部分。比如，项目启动前的准备工作只能由项目经理一个人完成。</li>
+<li><strong><code>并行部分 (Parallelizable Part)</code>：</strong> 程序中那些可以被拆分成小块，分配给多个处理器同时执行的部分。比如，翻译一本书，可以把不同章节分给不同译者同时翻译。</li>
+<li><strong><code>可扩展性 (Scalability)</code>：</strong> 指一个系统或算法在增加计算资源（如处理器数量）时，其性能提升的能力。阿姆达尔定律指出了可扩展性的一个理论上限。</li>
+</ul>
+</div>
+<h3>1.3 并行计算中的开销 (Overheads)：隐藏的性能“杀手”</h3>
+<p>如前所述，实际并行效率往往低于理想值，这主要是由各种开销 (Overheads) 造成的。开销是指在并行计算中，除了用于问题求解本身的有效计算之外，所有额外的时间或资源消耗。</p>
+<p>效率 <code>E</code> 可以通过总开销 <code>T<sub>o</sub></code> 和（理想的）总计算工作量 <code>T<sub>s</sub></code> (以单处理器执行时间衡量) 的关系来表达：</p>
+<div class="formula">
+         E = T<sub>s</sub> / (p * T<sub>p</sub>) = T<sub>s</sub> / (T<sub>o</sub> + T<sub>s</sub>) = 1 / (1 + T<sub>o</sub> / T<sub>s</sub>)
+        </div>
+<p>(注意：此处的 <code>T<sub>s</sub></code> 在分母中代表的是在 <code>p</code> 个处理器上完成的总计算时间，如果负载完美平衡且无额外计算，则等于单处理器上的串行时间。更精确的Denominator应为并行程序总执行时间在所有处理器上的累加，即 `p * T_p`。而 `p * T_p = T_s_parallel_part + T_s_serial_part_on_p_processors + T_o`。讲义中的简化公式 `E = 1 / (1 + T_o / T_s)` 将 `T_s` 视为总的串行工作量，当 `T_o` 相对 `T_s` 较大时，效率 `E` 会显著降低。)</p>
+<p>因此，最小化开销是提升并行效率的关键。主要的开销来源包括：</p>
+<ul>
+<li><strong>处理器/线程间的通信或同步 (Process/thread communication or synchronization)：</strong> 任务间的数据交换和协调执行顺序需要时间。</li>
+<li><strong>处理器/线程间的任务负载不均衡 (Workload imbalance among available processors/threads)：</strong> 某些处理器可能提前完成任务而空闲等待。</li>
+<li><strong>管理并行计算和增加并行度所引入的额外工作 (Extra work introduced to manage the computation and increase parallelism)：</strong> 例如数据分解、结果合并、任务调度等本身也消耗资源。</li>
+</ul>
+<p>在设计和实现并行算法时，必须尽最大努力识别并最小化所有不必要的开销。</p>
+<div class="term-definition">
+<p><strong>专业术语解释 (小白友好版):</strong></p>
+<ul>
+<li><strong><code>通信 (Communication)</code>：</strong> 在并行计算中，不同的处理器可能需要交换数据才能继续工作，就像团队成员需要互相传递信息。</li>
+<li><strong><code>同步 (Synchronization)</code>：</strong> 确保多个处理器在关键点上协调一致，避免数据混乱或错误。好比乐队演奏，指挥需要确保乐手们节奏一致。</li>
+<li><strong><code>负载均衡 (Load Balancing)</code>：</strong> 把工作量平均分配给所有参与的处理器，避免有的闲死，有的忙死。</li>
+</ul>
+</div>
+<hr/>
+<h2>第二部分：并行算法设计：从串行思维到并行蓝图（核心章节）</h2>
+<p>并行算法设计的目标是将一个问题规范（problem specification）转化为一个能够有效利用并行硬件，展现出良好并发性、可扩展性和局部性的算法。这通常不仅仅是将现有串行算法简单修改，而更像是一种“创造性”的活动，可能需要全新的思路和未曾研究过的想法。</p>
+<h3>2.1 通用设计流程：两阶段打造高效并行算法</h3>
+<p>根据讲义 (<a href="lecture03_2024" target="_blank">lecture03_2024</a>)，并行算法的通用设计过程通常涉及两个主要阶段：机器无关阶段和机器相关阶段。这种分阶段的方法有助于设计者首先专注于挖掘问题固有的并行性，然后再针对具体硬件进行优化。</p>
+<p>这一流程与并行计算领域广泛采用的PCAM设计方法学（Partitioning, Communication, Agglomeration, Mapping）思想一致 (<a href="https://blog.csdn.net/saoqi_boy/article/details/120583258" target="_blank">并行编程——Foster设计方法</a>)。</p>
+<h4>第一阶段：机器无关阶段 (Machine Independent Stage)</h4>
+<p>此阶段的目标是基于问题本身的特性，识别和最大限度地暴露潜在的并行性，而不具体考虑目标并行计算机的体系结构细节（如处理器数量、内存层级、通信网络拓扑等）。核心在于理解问题的计算需求和数据流动。</p>
+<h5>2.1.1 任务划分 (Partitioning)：识别并行的“原子”</h5>
+<p><strong>定义与目标：</strong> 任务划分是将整个计算问题分解成大量可以并发执行的更小的计算单元或“任务块”（primitive tasks）。重点在于定义足够多的小任务，以充分暴露并行机会。每个任务由其包含的计算和操作的数据构成。</p>
+<p><strong>主要类型：</strong></p>
+<ul>
+<li>
+<strong>领域分解 / 数据划分 (Domain Decomposition / Data Partitioning)：</strong>
+<p>首先将问题所操作的数据集（如矩阵、数组、几何区域等）分割成若干小块，然后将与每个数据块相关的计算定义为一个任务。这种方法非常适用于数据密集型应用。例如，在图像处理中，可以将大图像分割成多个子区域，每个处理器负责处理一个子区域。</p>
+<p><em>讲义示例（矩阵-向量乘法 <code>y = Ax</code> 的数据划分）:</em> 我们可以将矩阵A和向量x进行划分，然后将每个子矩阵与对应子向量的乘积累加操作关联起来作为任务。如下图所示，矩阵A的行（或块）和向量x可以被划分，多个处理器并行计算部分内积。</p>
+<img alt="矩阵向量乘法的数据划分示例" src="https://picture-search.tiangong.cn/image/doc/e1c2af67cf523c74480f03f5b54903cd.jpg"/>
+<p class="caption">图源：Bing Bing Zhou, lecture03_2024. 矩阵A按行划分（或块划分），向量b（PDF中用b，通常用x）整体或分块。计算每个y_i是独立的，或者若进一步细分内积，则需要后续通信。</p>
+<p><strong>观察：</strong> 任务大小通常比较均匀。适合细粒度并行，但如果细分到单个乘法，则内积的求和会有依赖，需要通信/同步。</p>
+</li>
+<li>
+<strong>功能分解 / 任务划分 (Functional Decomposition / Task Partitioning)：</strong>
+<p>首先将计算过程本身分解成不同的功能模块、计算阶段或逻辑上独立的操作序列。然后，将数据流与这些计算功能关联起来。这种方法适合于计算流程可以自然地分解为多个不同步骤的应用，例如信号处理流水线或编译器中的不同遍（pass）。</p>
+<p><em>讲义示例（矩阵-向量乘法 <code>y = Ax</code> 的任务划分）:</em> 我们可以将输出向量 <code>y</code> 的每个元素 <code>y<sub>i</sub></code> 的计算（即矩阵A的第<code>i</code>行与整个向量<code>x</code>的点积）视为一个独立的任务。这些计算 <code>y<sub>i</sub></code> 的任务之间是相互独立的（“embarrassingly parallel”）。</p>
+<img alt="矩阵向量乘法的任务划分示例" src="https://picture-search.tiangong.cn/image/doc/ee514b4e04f3cf3daf9ffa778f2ea42d.jpg"/>
+<p class="caption">图源：Bing Bing Zhou, lecture03_2024. 计算每个y_i (输出向量的一个元素) 是一个独立的任务。</p>
+<p><strong>观察：</strong> 任务大小均匀，n个任务之间没有依赖，是典型的“易并行”问题。</p>
+</li>
+</ul>
+<p>选择哪种划分策略取决于具体问题的特性。关键考量包括任务的粒度（一个任务包含多少计算量）、任务的数量以及任务间的均匀性。目标是产生足够多的细粒度任务，为后续的并行化步骤提供最大的灵活性。</p>
+<h5>2.1.2 通信与同步 (Communication/Synchronization)：编织协作之网</h5>
+<p><strong>定义与目标：</strong> 划分出来的任务往往不是完全独立的，它们之间可能存在数据依赖关系（一个任务的输出是另一个任务的输入）或控制依赖关系。通信是指在这些相互依赖的任务之间传递数据的过程。同步是指协调并发任务的执行顺序，确保它们在关键点上能够正确协作，例如，一个任务必须等待另一个任务产生所需数据后才能开始执行。</p>
+<p><strong>为何必要：</strong></p>
+<ul>
+<li><strong>数据流动：</strong> 并行任务需要交换中间结果。例如，在一个迭代算法中，一个处理器完成当前迭代后可能需要将其结果发送给其他处理器用于下一次迭代。</li>
+<li><strong>保持一致性：</strong> 当多个任务共享数据结构时，需要同步机制（如锁、信号量）来防止数据竞争和不一致状态。</li>
+<li><strong>顺序约束：</strong> 某些任务必须在其他任务完成后才能执行。</li>
+</ul>
+<p><strong>挑战：</strong> 通信和同步是并行计算中主要的开销来源之一。设计高效的通信结构（例如，选择合适的通信模式，如点对点、广播、规约等）和同步机制，以最小化通信延迟、带宽占用和同步等待时间，是并行算法设计的核心挑战。在任务划分阶段识别出的通信需求，会反过来影响划分策略的优劣评估。</p>
+<p><em>类比：</em> 想象一个大型建筑项目。工人（任务）被分配到不同区域（数据划分）或不同工种（功能划分）。他们需要通过对讲机（通信）交流进度和需求，有时需要在某个工序完成后（同步）才能开始下一个工序。</p>
+<h4>第二阶段：机器相关阶段 (Machine Dependent Stage)</h4>
+<p>在机器无关阶段识别出潜在的并行任务和它们之间的通信需求后，机器相关阶段的目标是将这些抽象的任务有效地映射到具体的并行硬件上，并针对特定机器的特性（如处理器核心数、内存层次结构、通信网络带宽和延迟等）进行性能优化。这一阶段通常包括任务组合（或聚合）和任务分配（或映射）。</p>
+<h5>2.1.3 任务组合/聚合 (Agglomeration) (隐式包含在讲义的Assignment中)</h5>
+<p><strong>定义与目标：</strong> 在机器无关阶段，我们倾向于将问题划分成大量细粒度的任务以最大限度地暴露并行性。然而，过多的细粒度任务可能会导致高昂的任务管理开销（如创建、调度、销毁任务）和通信开销（因为每个小任务都可能需要与其他任务通信）。任务组合的目标是通过评估任务间的通信模式和计算局部性，将那些通信密切、数据相关性强或者可以合并以减少总体开销的小任务“打包”成更大、更粗粒度的任务单元。</p>
+<p><strong>关键考量：</strong></p>
+<ul>
+<li><strong>通信局部性：</strong> 将频繁通信的任务组合在一起，可以使通信发生在处理器内部（如共享内存）或更快的通信链路上，从而减少通信延迟。</li>
+<li><strong>计算局部性：</strong> 组合任务可以增加数据在本地缓存或内存中被重用的机会，减少对慢速主存或远程内存的访问。</li>
+<li><strong>减少开销：</strong> 更少的任务意味着更低的任务管理开销。</li>
+<li><strong>控制粒度：</strong> 组合后的任务粒度不宜过大，以免限制并行度；也不宜过小，以致开销仍占主导。需要在并行度与开销之间找到平衡。</li>
+</ul>
+<p><em>类比：</em> 在一个工厂的流水线上，如果最初将每个螺丝的拧紧都视为一个独立任务，管理成本会很高。通过组合，可以让一个工人负责完成一个部件的多个紧固操作，这样更高效。</p>
+<h5>2.1.4 分配/映射 (Assignment / Mapping)：任务“安家落户”</h5>
+<p><strong>定义与目标：</strong> 任务分配是将（经过组合或未组合的）任务具体指派给并行系统中的各个物理处理器（或进程/线程）执行的过程。其核心目标是最大限度地提高处理器利用率并最小化总体执行时间。</p>
+<p><strong>核心目标与策略：</strong></p>
+<ul>
+<li>
+<strong>负载均衡 (Load Balancing)：</strong>
+<p>确保每个处理器分配到的计算工作量大致相等。如果负载不均，一些处理器会提前完成任务并进入空闲状态，而另一些处理器则会成为瓶颈，导致整体效率低下。负载均衡可以是静态的（在编译时或程序开始前根据已知的任务特征进行分配）或动态的（在程序运行时根据处理器的实时负载情况进行调整，例如使用任务窃取策略）。</p>
+</li>
+<li>
+<strong>最小化通信 (Minimize Inter-processor Communication)：</strong>
+<p>尽可能将需要频繁交换数据的任务分配到物理上“靠近”的处理器上。例如，在共享内存多核系统中，可以将它们分配给同一个CPU芯片上的不同核心；在分布式内存集群中，可以将它们分配给通过高速网络连接的节点。这有助于减少通信延迟和网络拥塞。</p>
+</li>
+</ul>
+<p><strong>挑战：</strong> 任务分配问题通常是NP难的优化问题，尤其是在异构系统或任务依赖复杂的情况下。实际中往往采用启发式算法或基于特定应用特性的策略。好的分配策略需要综合考虑计算负载、数据位置、通信模式和目标机器的体系结构。</p>
+<p><em>类比：</em> 项目经理（调度器）将不同的工作包分配给团队成员（处理器）。经理需要考虑每个成员的工作能力（处理器性能）、当前任务量（负载均衡），以及成员之间协作的便利性（通信成本）。</p>
+<div class="key-points">
+<h4>并行算法设计流程关键点总结</h4>
+<ul>
+<li><strong>机器无关阶段：</strong> 专注于问题本身，通过<strong>任务划分</strong>（数据划分或功能划分）来暴露并行性，并通过分析<strong>通信与同步</strong>需求来理解任务间的依赖关系。</li>
+<li><strong>机器相关阶段：</strong> 考虑具体硬件，通过<strong>任务组合/聚合</strong>（可选，但常用于优化）来调整任务粒度、优化局部性，并通过<strong>任务分配/映射</strong>来实现负载均衡和最小化通信开销。</li>
+<li>这整个过程是一个迭代和权衡的过程，需要创造性思维和对问题与硬件的深刻理解。</li>
+</ul>
+</div>
+<div class="term-definition">
+<p><strong>专业术语解释 (小白友好版):</strong></p>
+<ul>
+<li><strong><code>并发性 (Concurrency)</code>：</strong> 指系统能够同时处理多个任务的能力，这些任务可能在宏观上同时进行，微观上可能是交替执行。并行是并发的一种形式，指多个任务在同一时刻真实地同时执行。</li>
+<li><strong><code>可扩展性 (Scalability)</code>：</strong> （再次强调）指并行系统在增加处理器数量时，其性能（如加速比）相应提升的能力。好的设计应追求良好的可扩展性。</li>
+<li><strong><code>局部性 (Locality)</code>：</strong> 指处理器访问其本地内存或缓存中的数据比访问远程内存或主存中的数据更快。好的并行算法应尽量利用数据局部性来减少访存延迟。
+                    <ul>
+<li><strong><code>时间局部性 (Temporal Locality)</code>：</strong> 如果一个数据项被访问，那么在不久的将来它可能再次被访问。缓存会保留最近访问的数据。</li>
+<li><strong><code>空间局部性 (Spatial Locality)</code>：</strong> 如果一个数据项被访问，那么与它地址相邻的数据项也可能很快被访问。缓存通常一次加载一块连续的数据。</li>
+</ul>
+</li>
+<li><strong><code>任务粒度 (Task Granularity)</code>：</strong> 指一个任务中计算量的大小。<strong>细粒度 (Fine-grained)</strong> 任务小，潜在并行度高但管理和通信开销相对较大；<strong>粗粒度 (Coarse-grained)</strong> 任务大，管理开销小但可能并行度受限。</li>
+</ul>
+</div>
+<hr/>
+<h2>第三部分：挖掘并行潜力：结构与数学的艺术</h2>
+<p>在前一阶段我们讨论了如何将问题分解和映射到并行结构上。现在，我们将更深入地探讨如何从算法的内在结构和数学特性中挖掘更多的并行潜力。</p>
+<h3>3.1 任务依赖图 (Task Dependency Graph)：洞察算法的并行结构</h3>
+<p><strong>核心概念：</strong> 任务依赖图是一种有向无环图 (Directed Acyclic Graph, DAG)，它直观地表示了一个算法中各个子任务之间的执行依赖关系。在图中，节点代表任务，从节点A到节点B的有向边表示任务A必须在任务B开始之前完成（即B依赖于A的输出）。(<a href="https://blog.csdn.net/Aeve_imp/article/details/106719107" target="_blank">任务调度 -- DAG 并行执行调度</a>)</p>
+<p><strong>目的与作用：</strong></p>
+<ul>
+<li><strong>揭示并行结构模式 (Parallel Structure Patterns)：</strong> 清晰地展示哪些任务可以并行执行（图中没有直接或间接路径连接的节点），哪些任务必须按特定顺序串行执行（由边连接的节点）。</li>
+<li><strong>识别关键路径 (Critical Path)：</strong> 图中从起始节点到结束节点的所有路径中，执行时间（或任务数量，如果任务大小均一）最长的那条路径。关键路径的长度决定了整个并行算法执行时间的下限。优化关键路径是提升并行性能的核心。</li>
+<li><strong>预测工作量 (Work Prediction)：</strong> 所有任务的计算量总和代表了算法的总工作量。</li>
+<li><strong>分析并行度 (Degree of Parallelism)：</strong> 在任务依赖图的任何一个“横截面”（即同一时间点上），可以同时执行的任务数量，代表了该时刻的瞬时并行度。最大并行度是图中宽度最大的地方。</li>
+<li><strong>指导任务调度 (Task Scheduling)：</strong> 任务依赖图是任务调度算法的基础，帮助决定如何将任务有效地分配给可用的处理器，以尊重依赖关系并最小化完成时间。</li>
+<li><strong>其他属性分析：</strong> 如任务的规律性 (regularity)、边的特性（依赖类型）、结构是否依赖于输入数据等。</li>
+</ul>
+<p><strong>构建方法：</strong></p>
+<ol>
+<li>识别算法中的基本计算单元作为图中的节点（任务）。任务的粒度可以根据分析的需要来确定。</li>
+<li>分析任务之间的数据依赖关系（例如，一个任务的输出是另一个任务的输入——写真后读依赖）或其他控制依赖关系，从而确定图中边的方向。</li>
+</ol>
+<p>通常，呈现一个小的、代表性的任务依赖图就足以展示算法的并行特性。然而，对于非常复杂的算法，手动构建和分析其完整的任务依赖图可能非常具有挑战性。</p>
+<p><em>讲义示例（矩阵-向量乘法 <code>y = Ax</code> 的任务依赖图）:</em></p>
+<p>考虑计算 <code>y<sub>i</sub> = Σ (A<sub>ij</sub> * x<sub>j</sub>)</code>。如果我们把每个乘法 <code>A<sub>ij</sub> * x<sub>j</sub></code> 定义为一个最细粒度的任务，那么计算同一个 <code>y<sub>i</sub></code> 的所有这些乘法结果，还需要一系列的加法操作来汇总它们。这些加法操作之间就存在依赖关系。</p>
+<img alt="矩阵向量乘法的任务依赖图示例" src="https://picture-search.tiangong.cn/image/doc/98be44a72f943f3ef15907f655de1718.jpg"/>
+<p class="caption">图源：Bing Bing Zhou, lecture03_2024. 任务依赖图示例：矩阵向量乘法。每个节点代表一个乘法 (a<sub>ij</sub> * b<sub>j</sub>，讲义中用b表示输入向量)。垂直的箭头表示为计算同一个输出元素y<sub>i</sub>而进行的串行加法。不同的y<sub>i</sub>（即不同的垂直线）的计算是相互独立的。</p>
+<p>在此图中：</p>
+<ul>
+<li>每个节点代表一个乘法操作 <code>A<sub>ij</sub> * x<sub>j</sub></code>。</li>
+<li>沿垂直方向的箭头表示为了计算同一个输出元素 <code>y<sub>i</sub></code> 所需的串行加法（数据依赖）。例如，<code>y<sub>0</sub> = (A<sub>00</sub>*x<sub>0</sub> + A<sub>01</sub>*x<sub>1</sub>) + A<sub>02</sub>*x<sub>2</sub> + ...</code> 。</li>
+<li>每一条垂直的“箭头-节点”链代表一个输出元素 <code>y<sub>i</sub></code> 的点积计算过程。</li>
+<li>不同的垂直链之间（即计算不同的 <code>y<sub>i</sub></code>）可以并行执行，因为它们之间没有依赖关系（假设向量 <code>x</code> 是共享只读的，矩阵 <code>A</code> 的行也是独立读取的）。</li>
+</ul>
+<div class="term-definition">
+<p><strong>专业术语解释 (小白友好版):</strong></p>
+<ul>
+<li><strong><code>有向无环图 (Directed Acyclic Graph, DAG)</code>：</strong> 一种特殊的图，所有的边都有方向（比如从A指向B表示A必须在B之前完成），并且图中不存在任何环路（即不能从某个节点出发，沿着边的方向走一圈又回到自己）。任务依赖图就是一种DAG，因为任务执行不能形成循环等待（否则会造成死锁）。</li>
+<li><strong><code>关键路径 (Critical Path)</code>：</strong> 在任务依赖图中，从起点到终点的所有路径中，总耗时最长的那条路径。这条路径上的任何延迟都会直接影响整个项目的完成时间。</li>
+</ul>
+</div>
+<h3>3.2 数学结合律 (Math Associative Law)：打破串行枷锁的利器</h3>
+<p><strong>核心概念：</strong> 仅仅依靠算法的表面结构来分析并行性是不够的。算法背后的数学原理，特别是像结合律这样的性质，往往能为我们揭示更深层次的并行化机会，从而显著提高并行度。利用数学运算的结合律，我们可以改变运算的顺序和组合方式，将原本看似严格串行的计算过程转化为高度并行的结构。</p>
+<p><strong>结合律定义：</strong> 对于一个二元运算符 <code>⊗</code>（例如加法 `+` 或乘法 `*`），如果对于任意操作数 <code>a, b, c</code>，都满足 <code>(a ⊗ b) ⊗ c = a ⊗ (b ⊗ c)</code>，那么这个运算符就满足结合律 (<a href="https://baike.baidu.com/item/%E7%BB%93%E5%90%88%E5%BE%8B/2173834" target="_blank">百度百科-结合律</a>)。这意味着在一个包含多个该运算符的表达式中，只要操作数的位置不变，运算的顺序可以任意改变而不影响最终结果。</p>
+<p><strong>如何利用结合律提升并行性（以求和为例）：</strong></p>
+<p>考虑对n个整数求和：<code>s = a[0] + a[1] + ... + a[n-1]</code>。</p>
+<p><em>传统串行求和：</em></p>
+<pre><code>
+s = 0;
+for (i=0; i &lt; n; i++) {
+    s = s + a[i];
+}
+        </code></pre>
+<p>其任务依赖结构如下图所示，是一个严格的线性链条，每次加法都依赖于前一次的结果。这种结构是完全串行的。</p>
+<img alt="串行求和的依赖结构" src="https://picture-search.tiangong.cn/image/doc/ff5774736978297a84869863356fa257.jpg"/>
+<p class="caption">图源：Bing Bing Zhou, lecture03_2024. 串行求和的依赖图，具有完全串行的性质。</p>
+<p><em>利用加法结合律的并行求和：</em></p>
+<p>由于加法满足结合律，我们可以改变求和的顺序。例如，可以采用成对递归求和（一种分治策略）：</p>
+<ul>
+<li>首先，将n个数两两相加，得到 n/2 个部分和。这些两两相加的操作是可以并行执行的。</li>
+<li>然后，再将这 n/2 个部分和两两相加，得到 n/4 个新的部分和，这些操作也可以并行。</li>
+<li>依此类推，直到最后得到一个总和。</li>
+</ul>
+<p>这种计算结构形成了一个二叉树（或其他多叉树）的形状，如下图所示：</p>
+<img alt="利用结合律的并行求和（树形结构）" src="https://picture-search.tiangong.cn/image/doc/e047cd9f6a8631288fadf0d385edf914.jpg"/>
+<p class="caption">图源：Bing Bing Zhou, lecture03_2024. 利用加法结合律，求和操作可以组织成树形结构（如二叉树），大大提高并行度。</p>
+<img alt="分治求和示意图" src="https://picture-search.tiangong.cn/image/doc/7ce5978c59b3aa9c102f8d08b56fab27.jpg"/>
+<p class="caption">图源：Bing Bing Zhou, lecture03_2024. 分治技术在求和中的应用：递归地将数据划分为组，然后成对相加。</p>
+<p><strong>并行度提升：</strong> 通过这种方式，原本需要 <code>O(n)</code> 步串行计算完成的求和，现在可以在 <code>O(log n)</code> 个并行步骤内完成（树的高度）。在每一步中，都有大量的加法操作可以同时进行（树的宽度）。并行度从1（串行）提升到了 <code>O(n)</code>（第一步的并行加法数）。</p>
+<p><strong>应用场景：</strong></p>
+<ul>
+<li><strong>归约操作 (Reduction Operations)：</strong> 这类操作将一组输入数据通过一个满足结合律的二元操作符合并成一个单一结果。常见的归约操作包括求和、求积、求最大/最小值、逻辑与/或等。它们都可以利用结合律进行高效的并行化，形成树状归约结构。</li>
+<li><strong>分治策略 (Divide and Conquer)：</strong> 许多采用分治思想的算法（如快速排序中的某些部分、归并排序的归并阶段、快速傅里叶变换等）的并行化都依赖于其子问题的解可以独立计算，并且合并步骤可以并行化，而这通常与相关操作的结合律有关。</li>
+</ul>
+<p><strong>重要性：</strong> 深入理解算法背后的数学基础，特别是运算律，对于发现和利用并行性至关重要。有时，一个看似串行的问题，通过数学变换就能展现出巨大的并行潜力。这在实践中是非常重要的并行算法设计技巧 (<a href="https://zhuanlan.zhihu.com/p/98190609" target="_blank">CUDA编程入门（四）并行归约算法</a>)。</p>
+<div class="term-definition">
+<p><strong>专业术语解释 (小白友好版):</strong></p>
+<ul>
+<li><strong><code>结合律 (Associative Law)</code>：</strong> 我们小学学过的数学规律，比如 <code>(2 + 3) + 4</code> 的结果和 <code>2 + (3 + 4)</code> 的结果是一样的。这个简单的性质在并行计算中非常有用，因为它意味着我们可以打乱计算顺序，比如先算一部分，再算另一部分，最后合并，而不用严格地从头算到尾。</li>
+<li><strong><code>归约操作 (Reduction)</code>：</strong> 将一大堆输入数据，通过一个重复的、满足结合律的二元操作（比如加法、乘法、找最大/最小值），“缩减”成一个单一的最终结果的过程。</li>
+<li><strong><code>分治法 (Divide and Conquer)</code>：</strong> 一种常用的解决问题的策略。它把一个难以直接解决的大问题，分割成一些规模较小的相同或相似的子问题，以便各个击破，分别解决这些子问题。然后，再把子问题的解合并起来，从而得到原问题的解。</li>
+</ul>
+</div>
+<hr/>
+<h2>第四部分：案例分析：高斯消元法及其并行思考</h2>
+<p>高斯消元法是线性代数中求解线性方程组的一种基础且重要的方法。本部分将首先介绍高斯消元法的基本原理和部分选主元技术，然后探讨将其并行化时需要考虑的关键问题。</p>
+<h3>4.1 高斯消元法 (Gaussian Elimination)：求解线性方程组的基础</h3>
+<p><strong>核心概念：</strong> 高斯消元法是一种通过一系列系统性的行变换，将线性方程组 <code>Ax = b</code> 的增广矩阵 <code>[A|b]</code> 转化为一个等价的上三角矩阵形式，然后通过回代（Back Substitution）过程求解出未知数向量 <code>x</code> 的代数方法 (<a href="https://cloud.tencent.com/developer/article/1087352" target="_blank">高斯消元法(Gauss Elimination)【超详解&amp;模板】</a>)。</p>
+<p><strong>基本步骤 (不考虑选主元)：</strong></p>
+<p>对于一个 <code>n x n</code> 的系数矩阵 <code>A</code> 和 <code>n x 1</code> 的常数向量 <code>b</code>：</p>
+<ol>
+<li>
+<strong>消元 (Elimination)：</strong> 目的是将矩阵 <code>A</code> 转化为上三角形式。对于每一列 <code>i</code> (从第1列到第 <code>n-1</code> 列)：
+                <ul>
+<li>选取 <code>A[i-1][i-1]</code> (使用基于1的索引，或 <code>A[k][k]</code> 用基于0的索引 <code>k</code>) 作为主元 (pivot element)。</li>
+<li>对于主元下方的每一行 <code>j</code> (从第 <code>i+1</code> 行到第 <code>n</code> 行)：
+                        <ul>
+<li>计算乘数 <code>multiplier = A[j-1][i-1] / A[i-1][i-1]</code> (确保主元非零)。</li>
+<li>用第 <code>j</code> 行减去乘数乘以第 <code>i</code> 行 (即 <code>Row<sub>j</sub> = Row<sub>j</sub> - multiplier * Row<sub>i</sub></code>)。这个操作会使得 <code>A[j-1][i-1]</code> 变为0。</li>
+<li>这个行变换同时应用于增广矩阵的 <code>b</code> 部分。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<strong>回代 (Back Substitution)：</strong> 当矩阵 <code>A</code> 被转化为上三角矩阵 <code>U</code> 后，方程组变为 <code>Ux = b'</code> (<code>b'</code> 是经过相应行变换后的 <code>b</code>)。从最后一个方程（只含一个未知数 <code>x<sub>n-1</sub></code>）开始，逐行向上解出所有未知数。
+                <ul>
+<li><code>x<sub>n-1</sub> = b'<sub>n-1</sub> / U<sub>n-1,n-1</sub></code></li>
+<li>然后将 <code>x<sub>n-1</sub></code> 代入倒数第二个方程解出 <code>x<sub>n-2</sub></code>，以此类推。</li>
+</ul>
+</li>
+</ol>
+<img alt="高斯消元过程示意图" src="https://picture-search.tiangong.cn/image/doc/1331c9a3a0f27bca7498996139bd837e.jpg"/>
+<p class="caption">图源：Bing Bing Zhou, lecture03_2024. 高斯消元法通过行变换将矩阵A化为上三角形式。</p>
+<p><strong>LU 分解 (LU Factorization/Decomposition)：</strong></p>
+<p>高斯消元的过程（在不进行显式行交换，且主元始终非零的情况下）实际上等价于将原系数矩阵 <code>A</code> 分解为一个下三角矩阵 <code>L</code> 和一个上三角矩阵 <code>U</code> 的乘积，即 <code>A = LU</code>。</p>
+<ul>
+<li><strong><code>U</code> (Upper triangular matrix)：</strong> 就是高斯消元后得到的上三角矩阵。</li>
+<li><strong><code>L</code> (Lower triangular matrix)：</strong> 通常是一个单位下三角矩阵（主对角线元素全为1），其主对角线下方的元素 <code>L<sub>ji</sub></code> (<code>j &gt; i</code>) 存储了在消元第 <code>i</code> 列时，作用于第 <code>j</code> 行的乘数 (<code>multiplier</code>)。</li>
+</ul>
+<img alt="LU分解示意图" src="https://picture-search.tiangong.cn/image/doc/e23f1846df09a90140984073af73e830.jpg"/>
+<p class="caption">图源：Bing Bing Zhou, lecture03_2024. 高斯消元中，乘数m可以存储在被消零的元素位置，形成L矩阵（L=I+M），最终A=LU。</p>
+<p>LU分解非常有用，因为一旦得到 <code>L</code> 和 <code>U</code>，求解 <code>Ax = b</code> 就转化为求解两个相对简单的三角方程组：<code>Ly = b</code> (通过前向替换求解 <code>y</code>) 和 <code>Ux = y</code> (通过后向替换/回代求解 <code>x</code>)。如果需要对同一个矩阵 <code>A</code> 但不同的右端项 <code>b</code> 多次求解，LU分解的优势尤为明显，因为分解只需要做一次。</p>
+<div class="term-definition">
+<p><strong>专业术语解释 (小白友好版):</strong></p>
+<ul>
+<li><strong><code>线性方程组 (System of Linear Equations)</code>：</strong> 就是我们中学学过的包含多个未知数的一次方程组，比如 `2x + y = 5`, `x - y = 1`。</li>
+<li><strong><code>增广矩阵 (Augmented Matrix)</code>：</strong> 将线性方程组的系数矩阵和等号右边的常数项向量并排放在一起形成的矩阵。</li>
+<li><strong><code>上三角矩阵 (Upper Triangular Matrix)</code>：</strong> 一个方阵，其主对角线（从左上到右下）以下的元素全部为零。</li>
+<li><strong><code>回代 (Back Substitution)</code>：</strong> 当方程组被化为上三角形式后，从最后一个方程开始（它只包含最后一个未知数），很容易解出这个未知数。然后把这个解代入倒数第二个方程解出倒数第二个未知数，以此类推，像多米诺骨牌一样，直到所有未知数都被解出来。</li>
+<li><strong><code>LU分解 (LU Factorization/Decomposition)</code>：</strong> 就像把一个数字分解成两个因数的乘积（比如 12 = 3 * 4），LU分解是把一个方阵A分解成一个下三角矩阵L (Lower) 和一个上三角矩阵U (Upper) 的乘积（A = LU）。这种分解在数值计算中非常有用，特别是解线性方程组。</li>
+</ul>
+</div>
+<h3>4.2 部分选主元法 (Partial Pivoting)：提升数值稳定性的关键</h3>
+<p><strong>核心概念：</strong> 标准的高斯消元法在执行 <code>Row<sub>j</sub> = Row<sub>j</sub> - (A<sub>ji</sub> / A<sub>ii</sub>) * Row<sub>i</sub></code> 这样的操作时，如果主元 <code>A<sub>ii</sub></code>（即对角线上的元素）非常小或者为零，会导致严重问题。部分选主元法是一种在每一步消元操作开始前，通过行交换来选择一个“更好”的主元，以增强算法的数值稳定性和避免除零错误的技术 (<a href="https://blog.csdn.net/weixin_41094315/article/details/112250866" target="_blank">数值分析5 - 部分选主元的高斯消元法</a>)。</p>
+<p><strong>为何需要选主元？</strong></p>
+<ul>
+<li><strong>除零错误：</strong> 如果当前主元 <code>A<sub>ii</sub></code> 为零，那么计算乘数 <code>A<sub>ji</sub> / A<sub>ii</sub></code> 时会发生除零错误，算法无法继续。例如，矩阵 <code>A = [[0, 1], [1, 0]]</code> 如果不选主元，第一步就会失败。</li>
+<li><strong>数值不稳定性 (Numerical Instability)：</strong> 如果主元 <code>A<sub>ii</sub></code> 虽然非零但绝对值非常小，那么乘数 <code>A<sub>ji</sub> / A<sub>ii</sub></code> 可能会变得非常大。在后续的减法操作 <code>A<sub>jk</sub> - multiplier * A<sub>ik</sub></code> 中，一个非常大的乘数会极大地放大 <code>A<sub>ik</sub></code> 中可能存在的微小舍入误差 (Roundoff Error)，从而导致计算结果产生巨大偏差，甚至完全错误。这称为误差传播或误差放大。</li>
+</ul>
+<p><strong>部分选主元步骤 (Partial Pivoting)：</strong></p>
+<p>在处理第 <code>i</code> 列（将第 <code>i</code> 列对角线以下的元素消为零）之前：</p>
+<ol>
+<li><strong>查找最大主元：</strong> 在当前列（第 <code>i</code> 列）中，从对角线元素 <code>A<sub>ii</sub></code> 开始，向下搜索到该列的最后一个元素 <code>A<sub>ni</sub></code>，找到其中绝对值最大的那个元素。设其所在行为第 <code>k</code> 行 (<code>k ≥ i</code>)。</li>
+<li><strong>检查奇异性：</strong> 如果找到的最大绝对值主元也为零（或非常接近于零，小于某个阈值），则表明矩阵是奇异的（或接近奇异），可能无唯一解或有无穷多解。此时算法可以发出警告并终止。</li>
+<li><strong>行交换：</strong> 如果找到的最大绝对值主元所在的行 <code>k</code> 不是当前主元行 <code>i</code> (即 <code>k ≠ i</code>)，则交换矩阵的第 <code>i</code> 行和第 <code>k</code> 行的全部元素（包括增广矩阵的 <code>b</code> 部分对应元素）。</li>
+<li><strong>继续消元：</strong> 使用新的（经过行交换后的）<code>A<sub>ii</sub></code> 作为主元，执行正常的消元操作。</li>
+</ol>
+<img alt="高斯消元带部分选主元示意图" src="https://picture-search.tiangong.cn/image/doc/cf2cba0e67cca1b09bf51ece38a07f13.jpg"/>
+<p class="caption">图源：Bing Bing Zhou, lecture03_2024. 高斯消元法使用部分选主元：在第i列，从A(i,i)到A(n,i)中找到绝对值最大的元素，并将其所在行与第i行交换。</p>
+<p><strong>效果与意义：</strong></p>
+<ul>
+<li><strong>避免除零：</strong> 保证了主元尽可能大，理想情况下不为零（除非矩阵奇异）。</li>
+<li><strong>增强数值稳定性：</strong> 通过选择绝对值较大的主元，可以确保计算出的乘数 <code>|multiplier| = |A<sub>ji</sub> / A<sub>ii</sub>| ≤ 1</code>。这有助于控制舍入误差的积累和传播，从而得到更精确的解。</li>
+<li><strong>适用性更广：</strong> 使得高斯消元法能够处理更多类型的矩阵，包括那些不选主元时会失败或结果不准确的矩阵。</li>
+</ul>
+<p><strong>与全选主元法 (Full Pivoting) 的区别：</strong> 部分选主元法只在当前处理列的下方搜索主元。而全选主元法会在整个尚未处理的右下角子矩阵中搜索绝对值最大的元素作为主元，这可能涉及到行交换和列交换（列交换会改变未知数的顺序，需要记录）。全选主元法在理论上具有更好的数值稳定性，但其搜索主元的开销更大（每一步需要搜索 <code>(n-i)<sup>2</sup></code> 个元素，而部分选主元只需搜索 <code>n-i</code> 个元素），因此在实际应用中，部分选主元法因其在稳定性和效率之间的良好平衡而被更广泛地使用。</p>
+<div class="term-definition">
+<p><strong>专业术语解释 (小白友好版):</strong></p>
+<ul>
+<li><strong><code>主元 (Pivot Element)</code>：</strong> 在高斯消元的每一步中，我们选出来用来“开刀”的那个关键数字（通常在对角线上），用它来把同一列其他行的数字消成零。</li>
+<li><strong><code>数值稳定性 (Numerical Stability)</code>：</strong> 指一个算法在用计算机进行近似计算（因为计算机不能精确表示所有数字）时，会不会因为微小的计算误差（舍入误差）而导致最终结果错得离谱。一个数值稳定的算法对这种误差不敏感。</li>
+<li><strong><code>舍入误差 (Roundoff Error)</code>：</strong> 计算机在存储和计算数字时，因为位数有限，常常需要对数字进行四舍五入或者截断，由此产生的微小误差就叫舍入误差。</li>
+<li><strong><code>奇异矩阵 (Singular Matrix)</code>：</strong> 如果一个方阵的行列式等于零，它就是奇异矩阵。对于线性方程组 `Ax=b` 而言，如果A是奇异的，那么方程组要么没有解，要么有无穷多解，就是解不唯一。</li>
+</ul>
+</div>
+<h3>4.3 高斯消元法的并行化思考</h3>
+<p>将高斯消元法（特别是带有部分选主元的高斯消元法）并行化是一个复杂但重要的研究课题，因为它广泛应用于科学与工程计算中。根据前面学习的并行算法设计原则，我们可以从以下几个角度分析其并行潜力与挑战：</p>
+<p><strong>潜在的并行性：</strong></p>
+<ul>
+<li>
+<strong>外层循环（消元步骤 <code>k</code>）：</strong> 高斯消元的 <code>n-1</code> 个消元步骤（<code>k = 0</code> 到 <code>n-2</code>）之间存在严格的数据依赖。第 <code>k</code> 步的计算需要使用第 <code>k-1</code> 步更新后的矩阵。因此，这个外层循环本身是<strong>串行</strong>的，构成了并行化的主要瓶颈。
+            </li>
+<li>
+<strong>选主元过程 (Pivoting)：</strong> 在第 <code>k</code> 步，寻找主元的操作（在第 <code>k</code> 列的 <code>A[k][k]</code> 到 <code>A[n-1][k]</code> 之间找到绝对值最大的元素）可以并行化。例如，可以将这部分列元素分配给多个处理器，每个处理器找其负责部分的最大值，然后再通过一个全局归约操作（如并行求最大值）找到最终的主元及其位置。行交换本身也是一个可以并行化的数据移动操作。
+            </li>
+<li>
+<strong>内层循环（行操作 <code>i</code> 和元素更新 <code>j</code>）：</strong>
+<ul>
+<li><strong>行更新的并行性：</strong> 一旦主元行（第 <code>k</code> 行）确定并可能广播给所有处理器后，对于所有需要被消元的其他行（第 <code>i</code> 行，<code>i = k+1</code> 到 <code>n-1</code>），它们各自的更新操作 <code>Row<sub>i</sub> = Row<sub>i</sub> - multiplier<sub>ik</sub> * Row<sub>k</sub></code> 是相互独立的。这意味着这些行的更新可以<strong>并行执行</strong>。例如，如果每行数据分布在一个处理器上，则每个处理器可以独立计算其所拥有行的乘数并执行更新。</li>
+<li><strong>元素更新的并行性：</strong> 在每一行 <code>i</code> 的更新中，对该行所有元素 <code>A[i][j]</code> (对于 <code>j = k</code> 到 <code>n-1</code>，以及增广部分的 <code>b<sub>i</sub></code>) 的更新 <code>A[i][j] = A[i][j] - multiplier<sub>ik</sub> * A[k][j]</code> 也是可以并行处理的。这可以利用向量指令（SIMD，Single Instruction Multiple Data）在一个时钟周期内对多个数据元素执行相同操作，或者将一行内的元素进一步分配给更细粒度的并行单元。</li>
+</ul>
+</li>
+<li>
+<strong>回代过程 (Back Substitution)：</strong> 回代过程 <code>x<sub>i</sub> = (b'<sub>i</sub> - Σ<sub>j=i+1</sub><sup>n-1</sup> U<sub>ij</sub>x<sub>j</sub>) / U<sub>ii</sub></code> 具有较强的串行依赖性（计算 <code>x<sub>i</sub></code> 需要 <code>x<sub>i+1</sub>, ..., x<sub>n-1</sub></code> 的值）。然而，对于某些特定结构的矩阵（如带状稀疏矩阵），或者通过一些更复杂的算法重排，也可能发掘出有限的并行性。标准的密集矩阵回代并行性有限。
+            </li>
+</ul>
+<p><strong>并行化挑战与开销：</strong></p>
+<ul>
+<li><strong>数据依赖与同步：</strong> 外层循环的串行性是根本限制。每一步消元完成后，所有参与的处理器需要同步，确保矩阵数据更新一致，然后才能进入下一步的选主元。选主元完成后，选定的主元行信息（或者整个行）可能需要广播给所有参与更新的处理器，这也需要同步。</li>
+<li><strong>通信开销：</strong>
+<ul>
+<li><strong>广播主元行：</strong> 在每一步消元前，主元行需要被发送给所有需要用它来更新其他行的处理器。</li>
+<li><strong>行交换：</strong> 如果选主元导致行交换，并且矩阵的行是分布存储在不同处理器上的，那么行交换会引入显著的处理器间通信。</li>
+<li><strong>数据分发与收集：</strong> 根据数据划分策略，初始数据的分发和最终结果的收集也涉及通信。</li>
+</ul>
+</li>
+<li><strong>负载均衡：</strong> 高斯消元的一个显著特点是“工作量递减”。在第一步消元时，几乎所有行和列都参与计算。但随着步骤 <code>k</code> 的增加，需要处理的子矩阵规模（<code>(n-k) x (n-k)</code>）逐渐减小。如果采用固定的任务分配策略，后续步骤中被分配到较少工作的处理器可能会提前空闲，导致负载不均和效率下降。动态负载均衡策略可能有助于缓解此问题，但会增加管理开销。</li>
+</ul>
+<div class="chart-container" id="gaussLoadChartContainer">
+<canvas id="gaussLoadChart"></canvas>
+</div>
+<p class="caption">图3：高斯消元过程中每步操作的行数（示意负载变化）。假设矩阵大小为8x8，消元步骤从k=0到6。</p>
+<script>
+            const gaussLoadCtx = document.getElementById('gaussLoadChart').getContext('2d');
+            const n_gauss = 8; // Size of matrix
+            const k_steps = Array.from({length: n_gauss - 1}, (_, i) => `k=${i}`); // k from 0 to n-2
+            const rows_operated = Array.from({length: n_gauss - 1}, (_, i) => (n_gauss - 1) - i); // Number of rows operated on below pivot
+
+            new Chart(gaussLoadCtx, {
+                type: 'bar',
+                data: {
+                    labels: k_steps,
+                    datasets: [{
+                        label: 'Number of Rows to Update in Step k',
+                        data: rows_operated,
+                        backgroundColor: 'rgba(153, 102, 255, 0.6)', // Purple
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Elimination Step (k)' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Number of Rows Involved' },
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Gaussian Elimination: Load per Step (Illustrative for n=${n_gauss})`
+                        }
+                    }
+                }
+            });
+        </script>
+<p><strong>常见的并行策略（概述）：</strong></p>
+<ul>
+<li><strong>行划分 (Row-wise Partitioning / 1D Cyclic or Block Distribution)：</strong> 将矩阵的行（或行的条带）分配给不同的处理器。每个处理器负责其拥有的行的选主元（部分）、乘数计算和更新。主元行需要广播。行交换可能涉及跨处理器通信。</li>
+<li><strong>列划分 (Column-wise Partitioning / 1D Cyclic or Block Distribution)：</strong> 将矩阵的列（或列的条带）分配给不同处理器。这种策略在某些情况下（如需要访问整列进行选主元）可能比行划分更复杂。</li>
+<li><strong>块划分 (Block Partitioning / 2D Cyclic or Block Distribution)：</strong> 将矩阵划分为二维的子块，并将这些子块分配给一个逻辑上的处理器网格。这种方法通常能更好地平衡计算负载和最小化通信（通过使通信更局部化），但实现起来更复杂。ScaLAPACK 库中的并行LU分解就采用了这种策略。</li>
+<li><strong>流水线并行 (Pipelining)：</strong> 尝试重叠不同消元步骤的计算和通信。例如，当第 <code>k</code> 步的主元行确定后，可以立即开始计算第 <code>k</code> 列的乘数并更新部分行，同时，依赖于这些更新结果的第 <code>k+1</code> 步的某些预处理也可以开始。这需要非常精细的同步和调度。</li>
+</ul>
+<div class="key-points">
+<h4>高斯消元法并行化要点</h4>
+<ul>
+<li><strong>主要瓶颈：</strong> 外层循环的串行依赖性。</li>
+<li><strong>并行机会：</strong> 选主元、行更新、元素更新均存在并行潜力。</li>
+<li><strong>核心挑战：</strong> 管理数据依赖和同步、最小化通信开销（特别是主元广播和行交换）、处理工作量递减导致的负载不均衡。</li>
+<li><strong>常用策略：</strong> 基于行、列或块的数据划分，结合流水线技术。具体选择取决于目标并行架构（共享内存、分布式内存、GPU等）和问题规模。</li>
+</ul>
+</div>
+<p>总之，高斯消元法的并行化是一个在最大化并行度、最小化各种开销之间进行复杂权衡的过程。没有一种通用的最佳策略，具体实现需要根据算法特性、硬件平台和待解问题的规模进行精心设计和调优。</p>
+<hr/>
+<h2>附录：专业术语总览 (Glossary)</h2>
+<table>
+<thead>
+<tr>
+<th>术语 (Term)</th>
+<th>英文 (English)</th>
+<th>解释 (Explanation for Beginners)</th>
+<th>首次出现章节/位置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>并行计算</td>
+<td>Parallel Computing</td>
+<td>多个计算单元（如CPU核心）同时工作来解决一个大问题，像多人合作搬东西。</td>
+<td>1.1, 引言</td>
+</tr>
+<tr>
+<td>串行算法</td>
+<td>Sequential Algorithm</td>
+<td>一步接一步执行的算法，像单人按顺序完成任务列表。</td>
+<td>1.1</td>
+</tr>
+<tr>
+<td>加速比</td>
+<td>Speedup (S)</td>
+<td>并行计算比串行计算快了多少倍。</td>
+<td>1.1</td>
+</tr>
+<tr>
+<td>效率</td>
+<td>Efficiency (E)</td>
+<td>衡量处理器有多少真正在干活，而不是在等待或沟通。</td>
+<td>1.1</td>
+</tr>
+<tr>
+<td>开销</td>
+<td>Overhead</td>
+<td>为了实现并行而付出的额外代价，如沟通时间、任务分配时间等，这些时间不直接用于计算。</td>
+<td>1.1, 1.3</td>
+</tr>
+<tr>
+<td>阿姆达尔定律</td>
+<td>Amdahl's Law</td>
+<td>一个公式，告诉你并行计算加速能力的理论上限，主要受限于程序中必须串行完成的部分。</td>
+<td>1.2</td>
+</tr>
+<tr>
+<td>串行部分</td>
+<td>Sequential Part</td>
+<td>程序中必须按顺序一步步执行，不能拆分给多个人同时做的部分。</td>
+<td>1.2</td>
+</tr>
+<tr>
+<td>通信</td>
+<td>Communication</td>
+<td>并行任务间交换数据的过程。</td>
+<td>1.3, 2.1.2</td>
+</tr>
+<tr>
+<td>同步</td>
+<td>Synchronization</td>
+<td>协调多个并行任务，确保它们在关键点上“步调一致”。</td>
+<td>1.3, 2.1.2</td>
+</tr>
+<tr>
+<td>负载均衡</td>
+<td>Load Balancing</td>
+<td>把工作量平均分配给所有参与的处理器，避免有的闲置有的过载。</td>
+<td>1.3, 2.1.4</td>
+</tr>
+<tr>
+<td>任务划分 (广义)</td>
+<td>Partitioning</td>
+<td>将大问题或大数据分解成可以并行处理的小块。</td>
+<td>2.1.1</td>
+</tr>
+<tr>
+<td>数据划分 (领域分解)</td>
+<td>Data Partitioning (Domain Decomposition)</td>
+<td>按数据区域划分任务，每块数据及其计算交给一个处理器。</td>
+<td>2.1.1</td>
+</tr>
+<tr>
+<td>功能划分 (任务划分狭义)</td>
+<td>Functional Decomposition (Task Partitioning)</td>
+<td>按计算功能或步骤划分任务。</td>
+<td>2.1.1</td>
+</tr>
+<tr>
+<td>任务组合/聚合</td>
+<td>Agglomeration</td>
+<td>将细粒度任务聚合成粗粒度任务以减少开销和改善局部性。</td>
+<td>2.1.3</td>
+</tr>
+<tr>
+<td>任务分配 (映射)</td>
+<td>Assignment (Mapping)</td>
+<td>将划分好的小任务具体分配给哪个处理器去执行。</td>
+<td>2.1.4</td>
+</tr>
+<tr>
+<td>任务依赖图</td>
+<td>Task Dependency Graph</td>
+<td>一张图，显示了哪些任务必须先完成，哪些任务才能开始。</td>
+<td>3.1</td>
+</tr>
+<tr>
+<td>有向无环图</td>
+<td>Directed Acyclic Graph (DAG)</td>
+<td>边有方向且没有回路的图，任务依赖图就是一种DAG。</td>
+<td>3.1</td>
+</tr>
+<tr>
+<td>数学结合律</td>
+<td>Math Associative Law</td>
+<td>像 `(a+b)+c = a+(b+c)` 这样的数学规律，改变运算顺序不影响结果，有助于将串行计算并行化。</td>
+<td>3.2</td>
+</tr>
+<tr>
+<td>归约操作</td>
+<td>Reduction Operation</td>
+<td>将一堆数据通过某个操作（如求和、找最大值）合并成一个结果。</td>
+<td>3.2</td>
+</tr>
+<tr>
+<td>分治法</td>
+<td>Divide and Conquer</td>
+<td>将大问题分解为小问题分别解决，再合并结果的策略。</td>
+<td>3.2</td>
+</tr>
+<tr>
+<td>高斯消元法</td>
+<td>Gaussian Elimination</td>
+<td>一种解线性方程组的经典方法，通过行变换变成上三角形式再求解。</td>
+<td>4.1</td>
+</tr>
+<tr>
+<td>LU分解 (因子分解)</td>
+<td>LU Factorization/Decomposition</td>
+<td>将一个矩阵分解为一个下三角矩阵(L)和一个上三角矩阵(U)的乘积。</td>
+<td>4.1</td>
+</tr>
+<tr>
+<td>主元</td>
+<td>Pivot Element</td>
+<td>在高斯消元中，当前步骤用来消去其他行元素的那个关键数字。</td>
+<td>4.2</td>
+</tr>
+<tr>
+<td>部分选主元法</td>
+<td>Partial Pivoting</td>
+<td>高斯消元中，为了避免计算出错或误差过大，在每列选择绝对值最大的元素作为主元进行行交换的策略。</td>
+<td>4.2</td>
+</tr>
+<tr>
+<td>数值稳定性</td>
+<td>Numerical Stability</td>
+<td>算法在计算机浮点运算中抵抗舍入误差干扰的能力。</td>
+<td>4.2</td>
+</tr>
+<tr>
+<td>舍入误差</td>
+<td>Roundoff Error</td>
+<td>计算机因为存储位数限制导致无法精确表示数字而产生的计算误差。</td>
+<td>4.2</td>
+</tr>
+<tr>
+<td>并发性</td>
+<td>Concurrency</td>
+<td>宏观上同时处理多任务，微观上可能交替执行。</td>
+<td>2.1</td>
+</tr>
+<tr>
+<td>局部性</td>
+<td>Locality</td>
+<td>处理器快速访问本地数据的特性。</td>
+<td>2.1</td>
+</tr>
+<tr>
+<td>任务粒度</td>
+<td>Task Granularity</td>
+<td>单个任务的计算量大小。</td>
+<td>2.1.1</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2>总结与展望</h2>
+<h4>本笔记核心收获提炼：</h4>
+<ul>
+<li><strong>性能度量是基础：</strong> 理解了衡量并行计算性能的核心指标——加速比和效率，以及著名的阿姆达尔定律如何揭示并行加速的理论上限和串行部分的瓶颈效应。认识到并行开销是影响实际性能的关键因素。</li>
+<li><strong>设计流程是关键：</strong> 掌握了并行算法设计的通用两阶段流程：机器无关阶段（专注于任务划分、通信识别）和机器相关阶段（侧重于任务聚合、负载均衡和具体映射）。理解了PCAM方法论的核心思想。</li>
+<li><strong>挖掘潜力靠工具与思想：</strong> 学习了如何利用任务依赖图（DAG）来可视化和分析算法的并行结构与依赖关系，以及如何运用数学运算的结合律等思想来打破串行约束，创造或增强并行性。</li>
+<li><strong>案例分析促理解：</strong> 通过高斯消元法的案例，具体分析了将一个经典串行算法（及其数值稳定性改进——部分选主元法）并行化时需要考虑的问题，如固有的数据依赖、通信需求、负载均衡挑战以及潜在的并行点。</li>
+</ul>
+<h4>个人学习感悟：</h4>
+<p>通过整理这份笔记，我对并行编程的复杂性和精妙性有了更深的体会。它远不止是将代码简单地分配给多个处理器。以下几点尤其深刻：</p>
+<ul>
+<li><strong>依赖是核心：</strong> 数据依赖和控制依赖是并行设计的首要考量。如何识别、管理乃至打破不必要的依赖，是决定并行效果的关键。</li>
+<li><strong>开销无处不在：</strong> 通信、同步、负载不均、额外管理等开销是并行程序的天敌。阿姆达尔定律从理论上指出了串行部分的限制，而这些开销则从实践层面蚕食着并行带来的收益。</li>
+<li><strong>抽象与具体结合：</strong> 机器无关的设计阶段让我们能从宏观上把握并行潜力，而机器相关的阶段则要求我们关注硬件细节以实现高效映射。两者缺一不可。</li>
+<li><strong>数学的力量：</strong> 诸如结合律这样的基础数学原理，在并行算法优化中能发挥出人意料的巨大作用，它提醒我们不能仅停留在代码表面。</li>
+<li><strong>初学者的视角：</strong> 对于初学者而言，将抽象的并行概念（如加速比、任务依赖图）与具体的、可触摸的例子（如讲义中的矩阵运算、高斯消元，乃至生活中的类比）相结合，是加深理解的有效途径。同时，清晰地区分设计流程的各个阶段，有助于系统性地思考和解决问题。</li>
+</ul>
+<h4>后续学习方向建议：</h4>
+<p>并行计算是一个广阔且不断发展的领域。基于本笔记所学，为进一步深化理解和提升实践能力，建议从以下几个方向入手：</p>
+<ul>
+<li><strong>实践并行编程模型与工具：</strong> 动手实践是检验和巩固理论知识的最佳方式。可以尝试学习并使用一种或多种主流的并行编程模型/接口/语言：
+                <ul>
+<li><strong>OpenMP：</strong> 适用于共享内存系统的并行编程，相对容易上手。</li>
+<li><strong>MPI (Message Passing Interface)：</strong> 适用于分布式内存系统的并行编程，是高性能计算领域的事实标准。</li>
+<li><strong>CUDA / OpenCL / SYCL：</strong> 针对GPU等众核加速器的并行编程。</li>
+</ul>
+</li>
+<li><strong>深入研究特定并行算法：</strong> 选择一些经典的并行算法问题进行深入学习，例如：
+                <ul>
+<li>并行排序算法（如并行归并排序、桶排序）。</li>
+<li>并行快速傅里叶变换 (FFT)。</li>
+<li>图算法的并行化（如并行BFS/DFS、最短路径）。</li>
+<li>并行矩阵运算（除了高斯消元，还有如矩阵乘法、特征值计算等）。</li>
+</ul>
+                分析它们的并行策略、性能瓶颈和优化方法，如果可能，尝试编码实现。
+            </li>
+<li><strong>学习并行程序性能分析与优化：</strong> 掌握使用性能分析工具（profilers，如 Intel VTune Profiler, NVIDIA Nsight, gprof 等）来识别并行程序中的热点、瓶颈（如通信延迟、负载不均、同步争用等），并学习相应的优化技术。</li>
+<li><strong>阅读高级并行计算教材与文献：</strong> 阅读更系统和深入的并行计算教材，如 Peter Pacheco 的《并行计算导论》(An Introduction to Parallel Programming) 或 Ian Foster 的《Designing and Building Parallel Programs》，以及相关领域的最新研究论文，以跟踪前沿进展。</li>
+<li><strong>关注并行硬件发展：</strong> 了解新型并行处理器架构（如多核CPU、GPU、FPGA、TPU等）的特性及其对并行算法设计的影响。</li>
+</ul>
+<p>并行计算的旅程充满挑战，但也充满乐趣和机遇。希望这份笔记能为您打下坚实的基础！</p>
+</div>
+</body>
+</html>
