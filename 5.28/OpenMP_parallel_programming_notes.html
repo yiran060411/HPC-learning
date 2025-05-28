@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OpenMP并行编程基础与应用总结</title>
+<style>
+            :root {
+                --font-size-body: 16px;
+                --font-size-h5: 16px;       
+                --font-size-h4: 18px;    
+                --font-size-h3: 20px;     
+                --font-size-h2: 24px;    
+                --font-size-h1: 28px;    
+            }
+            body {
+                font-feature-settings: 'liga' off, 'clig' off;
+                font-family: "SF Pro";
+                font-size: var(--font-size-body);
+                color: #333B46;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 1.5; 
+                margin: 0 24px 0 24px; /* 上 右 下 左 */
+                padding: 0px;
+            }
+            .container {
+                max-width: 800px;
+                margin: 0px auto;
+                padding: 24px 40px;
+                background-color: #fff;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                border-radius: 8px;
+            }
+            .chart-container {
+                position: relative;
+                margin: 3em auto;
+                max-width: 500px;
+                height: 400px;
+                overflow: visible;
+                aspect-ratio: 7/5;}
+
+        
+        
+        h1, h2, h3, h4 {
+            font-weight: 600;
+            margin-top: 1.8em;
+            margin-bottom: 0.8em;
+            line-height: 1.3;
+            color: #2c3e50;
+        }
+        h1 { 
+            font-size: 2.4em; 
+            border-bottom: 2px solid #3498db; 
+            padding-bottom: 0.4em;
+            margin-top: 0;
+        }
+        h2 { 
+            font-size: 1.9em; 
+            border-bottom: 1px solid #bdc3c7; 
+            padding-bottom: 0.3em;
+        }
+        h3 { font-size: 1.5em; color: #2980b9; }
+        h4 { font-size: 1.25em; color: #16a085; }
+        p {
+            margin-top: 0;
+            margin-bottom: 1.2em;
+        }
+        ul, ol {
+            margin-bottom: 1.2em;
+            padding-left: 1.8em;
+        }
+        li {
+            margin-bottom: 0.6em;
+        }
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+            color: #2980b9;
+        }
+        pre {
+            background-color: #f6f8fa;
+            padding: 1em;
+            overflow-x: auto;
+            border-radius: 5px;
+            border: 1px solid #e1e4e8;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        code {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            background-color: #f0f2f4;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        pre code {
+          background-color: transparent;
+          padding: 0;
+          border-radius: 0;
+          border: none;
+        }
+        blockquote {
+            border-left: 4px solid #3498db;
+            padding-left: 1.2em;
+            margin-left: 0;
+            margin-right: 0;
+            font-style: italic;
+            color: #555;
+            background-color: #f9f9f9;
+            padding-top: 0.5em;
+            padding-bottom: 0.5em;
+            border-radius: 0 4px 4px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5em;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #dfe6e9;
+            padding: 0.9em;
+            text-align: left;
+        }
+        th {
+            background-color: #f5f7fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 1.2em auto;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            padding: 3px;
+        }
+        .chart-container {
+            width: 100%;
+            max-width: 700px;
+            height: 400px;
+            margin: 2em auto;
+            padding: 1em;
+            border: 1px solid #e1e4e8;
+            border-radius: 5px;
+            background-color: #fff;
+            aspect-ratio: 7/5;}
+        .current-date-meta {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-bottom: 2em;
+            text-align: right;
+        }
+        .key-points-summary {
+            background-color: #e8f6fd;
+            border-left: 5px solid #3498db;
+            padding: 18px 22px;
+            margin: 25px 0;
+            border-radius: 5px;
+        }
+        .key-points-summary h4 {
+            margin-top: 0;
+            color: #2980b9;
+        }
+        .nav-toc {
+            background-color: #f9f9f9;
+            border: 1px solid #e1e4e8;
+            padding: 15px 20px;
+            margin-bottom: 2.5em;
+            border-radius: 5px;
+        }
+        .nav-toc h3 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-size: 1.3em;
+            color: #2c3e50;
+        }
+        .nav-toc ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .nav-toc ul li { margin-bottom: 8px; }
+        .nav-toc ul li a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+        }
+        .nav-toc ul li a:hover {
+            color: #3498db;
+            text-decoration: underline;
+        }
+        .nav-toc ul ul {
+            padding-left: 20px;
+            margin-top: 8px;
+        }
+        .nav-toc ul ul li a {
+            font-weight: normal;
+        }
+        .glossary-term {
+            margin-bottom: 1em;
+        }
+        .glossary-term strong {
+            font-weight: bold;
+            color: #16a085;
+        }
+        footer {
+            text-align: center;
+            margin-top: 3.5em;
+            padding-top: 1.5em;
+            border-top: 1px solid #bdc3c7;
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+        .caption {
+            text-align: center;
+            font-size: 0.9em;
+            color: #777;
+            margin-top: -0.8em;
+            margin-bottom: 1.2em;
+        }
+        /* Helper class to make certain terms stand out */
+        .term {
+            font-weight: bold;
+            color: #c0392b; /* A distinct color for key terms */
+        }
+    
+        .chart-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: contain;
+}
+
+@media only screen and (max-device-width: 768px) {
+            body {
+                padding: 0;
+                margin: 0;
+                font-family: PingFang SC;
+                font-size: 15px;
+                line-height: 1.5;
+            }
+
+            .container {
+                padding: 0;
+                margin: 16px auto 30px;
+                box-shadow: none;
+            }
+
+            h1,
+            h2,
+            h3,
+            h4 {
+                font-family: PingFang SC;
+            }
+
+            h1 {
+                font-size: 1.87em;
+                line-height: 1.6;
+                margin-bottom: 0.5em;
+                text-align: center;
+            }
+
+            h2 {
+                font-size: 1.6em;
+                font-weight: 600;
+                margin-top: 1.3em;
+                margin-bottom: 0.8em;
+                border-bottom: 1px solid #eee;
+                padding-bottom: 0.5em;
+            }
+
+            h3 {
+                font-size: 1.2em;
+                font-weight: 600;
+                margin-top: 1em;
+                margin-bottom: 0.6em;
+            }
+
+            h4 {
+                font-size: 1.1em;
+                font-weight: 500;
+                margin-top: 1em;
+                margin-bottom: 0.5em;
+                font-style: normal;
+            }
+
+            h5 {
+                font-size: 1em;
+                font-weight: 500;
+                margin-bottom: 1.2em;
+            }
+
+            ul,
+            ol {
+                font-size: 1em; /* Equivalent to 17.6px if base is 16px */
+                font-weight: 400;
+                margin-bottom: 1.2em;
+                line-height: 1.8;
+            }
+
+            p {
+                font-size: 1em;
+                line-height: 1.8; /* Equivalent to 17.6px if base is 16px */
+                font-weight: 400;
+                margin-top: 0.8em;
+                margin-bottom: 0.8em;
+            }
+
+            blockquote {
+                padding: 1em 1.2em;
+
+            p {
+                margin: 0;
+            }
+        }
+
+        figcaption {
+            margin-top: 0.5em;
+            font-size: 0.8em; /* Equivalent to 17.6px if base is 16px */
+            font-weight: 400;
+            text-align: center;
+            font-style: normal;
+            color: #7F8896;
+        }
+
+        img {
+            display: block;
+            overflow: hidden;
+            max-width: 100%;
+            max-height: 335px;
+            margin: 1em auto;
+            border-radius: 8px;
+        }
+        ｝</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="container">
+<h1>OpenMP并行编程基础与应用总结</h1>
+<p class="current-date-meta">当前时间: 2025-05-28</p>
+<nav class="nav-toc" id="table-of-contents">
+<h3>目录</h3>
+<ul>
+<li><a href="#introduction">引言</a></li>
+<li><a href="#openmp-basics">OpenMP 基础核心</a>
+<ul>
+<li><a href="#parallel-computing-shared-memory">并行计算与共享内存模型</a></li>
+<li><a href="#execution-model-concepts">OpenMP 执行模型与核心概念</a></li>
+<li><a href="#data-environment-scope">OpenMP 数据环境与作用域</a></li>
+<li><a href="#granularity-partitioning">并行粒度与任务划分</a></li>
+</ul>
+</li>
+<li><a href="#openmp-core-elements">OpenMP 核心要素：指令、库函数与环境变量</a>
+<ul>
+<li><a href="#compiler-directives">编译器指令 (Compiler Directives - Pragmas)</a></li>
+<li><a href="#runtime-library-routines">运行时库函数 (Runtime Library Routines)</a></li>
+<li><a href="#environment-variables">环境变量 (Environment Variables)</a></li>
+</ul>
+</li>
+<li><a href="#openmp-practice-applications">OpenMP 实践与应用</a>
+<ul>
+<li><a href="#example1-hello-world">实例一：循环并行化 - "Hello World" 并行版</a></li>
+<li><a href="#example2-vector-dot-product">实例二：循环并行化 - 向量点积计算</a></li>
+<li><a href="#example3-matrix-multiplication">实例三：矩阵乘法并行化 (C = A * B)</a></li>
+</ul>
+</li>
+<li><a href="#compiling-running">编译与运行 OpenMP 程序</a></li>
+<li><a href="#learning-resources">学习资源与进阶路径</a></li>
+<li><a href="#summary">总结</a></li>
+<li><a href="#glossary">附录：专业词语汇编 (Glossary)</a></li>
+</ul>
+</nav>
+<section id="introduction">
+<h2>引言</h2>
+<p><strong>OpenMP 简介</strong>: OpenMP (Open Multi-Processing) 是一种用于<a href="https://en.wikipedia.org/wiki/Shared_memory" target="_blank">共享内存</a>并行计算的应用程序接口 (API)。它通过一套编译器指令、库函数和环境变量，使得开发者能够相对轻松地在 C、C++ 和 Fortran 等语言中编写并行程序，以充分利用多核处理器的计算能力。OpenMP 的主要目标是简化共享内存环境下的并行编程，提供一种可移植、可扩展的方式，实现程序的增量式并行化。(<a href="https://www.openmp.org/" target="_blank">OpenMP ARB</a>)</p>
+<p><strong>本笔记目的与结构</strong>: 本笔记旨在帮助初学者系统地理解 OpenMP 的核心概念、基本用法和常见应用场景。内容将从并行计算的基础知识入手，逐步深入到 OpenMP 的执行模型、关键指令、数据处理、同步机制以及实际案例分析，并提供进一步学习的资源。</p>
+<p><strong>目标读者</strong>: 主要面向对并行计算感兴趣的初学者、希望利用多核处理器提升程序性能的C/C++/Fortran开发者，以及需要理解OpenMP基本原理的计算机相关专业学生。</p>
+<p><strong>学习前置</strong>: 建议读者具备基础的 C 或 C++ (或 Fortran) 编程能力，并对计算机体系结构（如 CPU、多核、内存）有初步了解。</p>
+</section>
+<section id="openmp-basics">
+<h2>OpenMP 基础核心</h2>
+<section id="parallel-computing-shared-memory">
+<h3>并行计算与共享内存模型</h3>
+<p><strong>并行计算简介</strong>: <span class="term">并行计算 (Parallel Computing)</span> 是指同时使用多个计算资源（如CPU核心）来解决一个计算问题的过程。其目标是通过并发执行任务来缩短计算时间或解决更大规模的问题。</p>
+<p><strong>共享内存平台 (Shared Memory Platform)</strong>:</p>
+<ul>
+<li><strong>定义</strong>: 指多个处理器（或一个多核处理器的多个核心）共享同一个物理内存地址空间的计算机体系结构。所有处理器/核心都可以直接访问全部内存数据。这种架构也被称为对称多处理系统（Symmetric Multiprocessing, SMP）。</li>
+<li><strong>特性</strong>:
+                        <ul>
+<li><strong>通信方式</strong>: <span class="term">线程 (Thread)</span> 间通过读写共享内存中的变量进行隐式通信。这是共享内存编程模型的核心优势之一，因为数据不需要显式地在不同内存空间之间传递。</li>
+<li><strong>数据一致性</strong>: 需要确保多个线程访问共享数据时的一致性和正确性。现代处理器通常依赖<span class="term">缓存一致性 (Cache Coherency)</span>协议（如MESI协议）来维护不同核心缓存中共享数据的副本。</li>
+<li><strong>同步需求</strong>: 由于所有线程共享同一地址空间，必须使用同步机制来协调线程对共享资源的访问，以避免<span class="term">竞争条件 (Race Condition)</span>、<span class="term">死锁 (Deadlock)</span>等问题。</li>
+<li><strong>适用性</strong>: 共享内存机器通常规模相对较小（例如，单个服务器节点内的多核/多CPU），适合<span class="term">粗粒度并行 (Coarse-grained Parallelism)</span>，但也支持<span class="term">细粒度并行 (Fine-grained Parallelism)</span>，尽管后者可能因同步开销而效率不高。</li>
+</ul>
+</li>
+</ul>
+<img alt="共享内存模型中线程与共享地址空间示意图" src="https://picture-search.tiangong.cn/image/doc/bd493bf98c7f42943edc105442bcf7ce.jpg"/>
+<p class="caption">图1: 共享内存模型下一个进程内的多个线程共享同一地址空间 (来源: lecture04_2024)</p>
+<h4>专业词语解释 (本节相关)</h4>
+<blockquote>
+<p><strong>并行计算 (Parallel Computing)</strong>: 同时使用多个计算单元（如CPU核心）来执行一个任务的不同部分或多个任务，目的是提高计算速度或处理更大规模的问题。</p>
+<p><strong>共享内存 (Shared Memory)</strong>: 一种计算机内存架构，其中所有<span class="term">处理器/核心 (Processor/Core)</span> (CPU中执行指令的独立计算单元)可以访问同一个全局物理地址空间。程序中的多个线程可以透明地共享数据。</p>
+<p><strong>线程 (Thread)</strong>: 操作系统能够进行运算调度的最小单位。它被包含在进程之中，是进程中的实际运作单位。同一进程内的多个线程共享该进程的地址空间和资源，这使得线程间的通信比进程间通信更高效。</p>
+<p><strong>缓存一致性 (Cache Coherency)</strong>: 在多处理器系统中，每个处理器通常有自己的本地缓存。缓存一致性是确保当一个处理器的缓存修改了共享数据后，其他处理器缓存中该数据的副本也能得到相应更新（或失效）的机制，从而保证所有处理器看到的数据是一致的。</p>
+</blockquote>
+</section>
+<section id="execution-model-concepts">
+<h3>OpenMP 执行模型与核心概念</h3>
+<p>OpenMP采用基于线程的并行执行模型，其核心是<strong>Fork-Join 并行模型</strong>。</p>
+<ul>
+<li><strong>描述</strong>: OpenMP程序开始时只有一个<span class="term">主线程 (Master Thread)</span>执行。当程序执行遇到一个<span class="term">并行区域 (Parallel Region)</span>（通常由<code>#pragma omp parallel</code>指令定义）时，主线程会派生(Fork)出一个或多个额外的线程，形成一个<span class="term">线程团队 (Team of Threads)</span>。主线程自身成为团队的一员（通常是线程号为0的线程），与新创建的<span class="term">工作线程 (Worker Thread)</span>一起并行地执行并行区域内的代码。当所有线程完成了并行区域的任务后，它们会进行同步，然后工作线程终止或进入等待状态，只有主线程继续执行并行区域之后的串行代码。这个团队线程汇合的过程称为Join。</li>
+<li><strong>图示</strong>: 
+                        <img alt="OpenMP Fork-Join 并行模型" src="https://picture-search.tiangong.cn/image/doc/5c19c1f1256125e728349e44705899e9.jpg"/>
+<p class="caption">图2: OpenMP的Fork-Join并行模型示意图，展示了主线程如何派生和汇合工作线程 (来源: lecture04_2024, Page 18)。</p>
+</li>
+</ul>
+<p><strong>并行区域 (Parallel Region)</strong>:</p>
+<ul>
+<li><strong>定义</strong>: 使用<code>#pragma omp parallel</code>指令定义的结构化代码块。当程序执行流进入此区域时，线程团队被创建（或激活），团队中的每个线程都会独立执行该并行区域内的代码。</li>
+<li><strong>关键点</strong>: 默认情况下，在并行区域的末尾存在一个<span class="term">隐式壁垒 (Implied Barrier)</span>。这意味着团队中的所有线程必须都执行完并行区域内的代码并到达这个壁垒后，主线程才能继续执行后续的串行代码。这个隐式壁垒可以通过<code>nowait</code>子句取消（如果逻辑允许）。</li>
+</ul>
+<p><strong>同步 (Synchronization)</strong>:</p>
+<ul>
+<li><strong>必要性</strong>: 在共享内存编程中，当多个线程并发访问（特别是修改）共享数据时，需要同步来保证操作的原子性、顺序性和数据的一致性，从而防止出现非预期的结果。正如讲义中提到的，“Threads communication implicitly using shared variables– Threads coordination explicitly by synchronization on shared variables”。</li>
+<li><strong>竞争条件 (Race Condition)</strong>:
+                        <ul>
+<li><strong>定义</strong>: 当多个线程并发地读写共享数据项，并且最终的计算结果取决于这些线程执行的相对顺序（即“谁最后完成关键操作”）时，就会发生竞争条件。这会导致程序结果不可预测、不可复现。</li>
+<li><strong>示例 (源自讲义)</strong>: 考虑两个线程，一个执行<code>count++</code>，另一个执行<code>count--</code>，初始<code>count</code>为5。<code>count++</code>在高级语言中看起来是一条指令，但在机器层面通常分解为三步：(1)从内存读取<code>count</code>到寄存器 (<code>register1 = count</code>)，(2)寄存器值加1 (<code>register1 = register1 + 1</code>)，(3)将寄存器值写回内存 (<code>count = register1</code>)。如果这两个线程的这三步操作发生交错，最终<code>count</code>的值可能是4、5或6，而不是预期的5。为避免这种情况，需要确保<code>count++</code>或<code>count--</code>操作的原子性，例如使用临界区。
+                                <pre><code>
+// High-level view:
+// Thread 1: count++
+// Thread 2: count--
+
+// Low-level (pseudo-assembly):
+// count++:
+//   register1 = count
+//   register1 = register1 + 1
+//   count = register1
+//
+// count--:
+//   register2 = count
+//   register2 = register2 - 1
+//   count = register2</code></pre>
+</li>
+</ul>
+</li>
+<li><p><strong>死锁 (Deadlock)</strong>: 两个或多个线程因相互等待对方持有的资源而导致所有线程都无法继续执行，陷入永久阻塞的状态。例如，线程A持有锁L1并尝试获取锁L2，而线程B持有锁L2并尝试获取锁L1。避免死锁通常需要精心设计锁的获取顺序或使用无死锁的同步机制。</p></li>
+</ul>
+<h4>专业词语解释 (本节相关)</h4>
+<blockquote>
+<p><strong>Fork-Join 模型 (Fork-Join Model)</strong>: 一种并行执行模型，其中主线程遇到并行任务时“派生(fork)”出一组子线程来并行执行任务，然后在所有子线程完成工作后“汇合(join)”，由主线程继续执行后续代码。</p>
+<p><strong>主线程 (Master Thread)</strong>: OpenMP程序开始时执行的初始线程。在并行区域中，它也是线程团队的一员，通常具有线程ID 0。</p>
+<p><strong>工作线程 (Worker Thread)</strong>: 在并行区域中由主线程派生（或激活）出来，与主线程共同执行并行任务的线程。</p>
+<p><strong>并行区域 (Parallel Region)</strong>: 在OpenMP中，由<code>#pragma omp parallel</code>指令定义的代码块，该代码块由线程团队中的所有线程并行执行。</p>
+<p><strong>隐式壁垒 (Implied Barrier)</strong>: 在OpenMP的某些并行构造（如并行区域末尾、没有<code>nowait</code>子句的循环构造末尾）默认存在的同步点。所有线程必须到达该点后，才能有线程继续执行壁垒之后的代码。</p>
+<p><strong>同步 (Synchronization)</strong>: 在并发编程中，用于协调多个线程执行顺序和对共享资源访问的机制，以确保数据一致性和程序行为的确定性。</p>
+<p><strong>竞争条件 (Race Condition)</strong>: 由于多个线程对共享资源的访问顺序不确定，导致程序最终结果依赖于这种不可控的顺序，从而产生错误或不可预测行为的情况。</p>
+<p><strong>死锁 (Deadlock)</strong>: 两个或多个线程在执行过程中，因争夺资源而造成的一种互相等待的现象，若无外力作用，它们都将无法推进下去。</p>
+</blockquote>
+</section>
+<section id="data-environment-scope">
+<h3>OpenMP 数据环境与作用域</h3>
+<p>在OpenMP中，正确管理并行区域中变量的<span class="term">数据作用域 (Data Scope)</span>至关重要。OpenMP允许开发者通过子句明确指定变量是共享的还是私有的。</p>
+<ul>
+<li><strong>共享变量 (Shared Variables)</strong>:
+                        <ul>
+<li><strong>声明</strong>: 默认情况下，在并行区域外部声明并在并行区域内使用的变量是共享的。也可以使用<code>shared(list)</code>子句显式声明。</li>
+<li><strong>特性</strong>: 团队中的所有线程访问的是内存中的同一个实例。对共享变量的并发写操作必须小心处理，通常需要同步（如使用<code>critical</code>, <code>atomic</code>, 或<code>reduction</code>）以避免竞争条件。</li>
+</ul>
+</li>
+<li><strong>私有变量 (Private Variables)</strong>:
+                        <ul>
+<li><strong>声明</strong>: 使用<code>private(list)</code>子句声明。在并行区域内声明的变量（如循环迭代变量或局部于并行块的变量）通常也是私有的。</li>
+<li><strong>特性</strong>: 每个线程都会为列表中的变量创建一个独立的、未初始化的副本（除非使用了其他子句）。对私有变量的修改仅在该线程内部可见，不会影响其他线程的副本或原始变量。</li>
+<li><strong><code>firstprivate(list)</code></strong>: 类似<code>private</code>，但每个线程的私有副本会使用进入并行区域前主线程中同名变量的值进行初始化。</li>
+<li><strong><code>lastprivate(list)</code></strong>: 类似<code>private</code>。在并行结构（通常是循环或<code>sections</code>构造）结束后，顺序执行的最后一次迭代（或<code>sections</code>构造中词法上最后的<code>section</code>块）中该变量的值会被复制回主线程的同名变量。</li>
+<li><strong><code>reduction(operator:list)</code></strong>: 一种特殊的共享属性处理。它为每个线程创建一个私有副本（通常用操作符的幺元初始化，如+用0，*用1），线程对私有副本进行累积操作。并行区域结束时，所有线程的私有副本通过指定的操作符（如<code>+</code>, <code>*</code>, <code>max</code>, <code>min</code>, <code>&amp;&amp;</code>, <code>||</code>等）合并到原始共享变量中。这是处理并行累加等操作的安全高效方式。</li>
+</ul>
+</li>
+</ul>
+<p><strong>数据依赖 (Data Dependency)</strong>:</p>
+<ul>
+<li><strong>定义</strong>: 如果一个计算任务的执行结果或执行本身依赖于另一个计算任务的结果，则称这两个任务之间存在数据依赖。例如，在循环中，某次迭代计算的结果被后续迭代使用，这被称为<span class="term">循环携带依赖 (Loop-carried dependency)</span>。</li>
+<li><strong>影响</strong>: 数据依赖会限制并行化的程度和方式。直接并行化存在数据依赖（特别是写后读、读后写、写后写依赖）的代码段可能导致错误结果。处理数据依赖通常需要算法层面的改造、使用同步机制或OpenMP提供的特定子句（如<code>reduction</code>处理特定类型的累加依赖，<code>ordered</code>处理需要按顺序执行的部分）。</li>
+</ul>
+<p><strong>数据局部性 (Data Locality)</strong>:</p>
+<ul>
+<li><strong>定义</strong>: 指处理器在访问数据时，倾向于访问在时间上（刚刚访问过的数据，称为时间局部性）或空间上（物理内存位置邻近的数据，称为空间局部性）接近的数据项。利用好数据局部性可以有效提高<span class="term">缓存 (Cache)</span>命中率，减少对较慢主内存的访问延迟，从而提升程序性能。</li>
+<li><strong>重要性</strong>: 在并行环境中，尤其是在共享内存系统中，虽然所有数据在逻辑上是共享的，但每个CPU核心通常拥有自己的私有缓存（L1, L2 cache），有时还共享更高级别的缓存（L3 cache）。合理的数据划分和任务分配，使得线程能更多地访问其本地缓存中的数据（或紧密共享的缓存中的数据），对于降低内存瓶颈、实现良好并行加速至关重要。讲义中提到“since we must seriously consider ILP, memory hierarchy and cache effect”强调了这一点。</li>
+</ul>
+<h4>专业词语解释 (本节相关)</h4>
+<blockquote>
+<p><strong>共享变量 (Shared Variable)</strong>: 在OpenMP并行区域中，所有线程共同访问和操作的同一个内存位置的变量实例。</p>
+<p><strong>私有变量 (Private Variable)</strong>: 在OpenMP并行区域中，每个线程拥有其独立副本的变量。一个线程对私有变量的修改对其他线程不可见。</p>
+<p><strong>数据作用域子句 (Data-Scoping Clause)</strong>: OpenMP指令的子句，如 <code>shared</code>, <code>private</code>, <code>firstprivate</code>, <code>lastprivate</code>, <code>reduction</code> 等，用于定义并行区域中变量的共享属性和行为。</p>
+<p><strong>数据依赖 (Data Dependency)</strong>: 计算任务间的约束关系，一个任务的执行需要等待另一个任务完成或产生特定数据。</p>
+<p><strong>数据局部性 (Data Locality)</strong>: 程序在执行过程中访问内存地址在时间和空间上的集中程度。良好的数据局部性有助于提高缓存利用率和程序性能。</p>
+<p><strong>缓存 (Cache)</strong>: 一种小而快速的存储器，用于存放最近访问过的数据或指令的副本，以加快处理器对这些数据的访问速度。</p>
+</blockquote>
+</section>
+<section id="granularity-partitioning">
+<h3>并行粒度与任务划分</h3>
+<p><strong>并行粒度 (Parallel Granularity)</strong>:</p>
+<ul>
+<li><strong>定义</strong>: <span class="term">并行粒度</span>指的是并行任务中单个任务的计算量与该任务执行过程中所需的通信或同步开销之间的相对比例。它是衡量并行任务“大小”的一个指标。</li>
+<li><strong>细粒度并行 (Fine-grained Parallelism)</strong>:
+                        <ul>
+<li><strong>特点</strong>: 将问题分解为大量的小计算任务。每个任务的计算量小，线程间可能需要频繁地进行同步或数据交换。</li>
+<li><strong>优缺点</strong>: 潜在的并行程度高，如果任务可以均匀分配，则更容易实现<span class="term">负载均衡 (Load Balancing)</span>。然而，频繁的同步和通信会引入显著开销，可能抵消并行带来的收益，甚至导致性能下降（<a href="https://en.wikipedia.org/wiki/Granularity_(parallel_computing)" target="_blank">Wikipedia: Granularity</a>）。</li>
+<li><strong>示例</strong>: 讲义中矩阵乘法提到“all output elements C<sub>ij</sub> can be computed concurrently– However, this is a fine-grained parallelism”。计算每个C<sub>ij</sub>中的一个单独乘加操作。</li>
+</ul>
+</li>
+<li><strong>粗粒度并行 (Coarse-grained Parallelism)</strong>:
+                        <ul>
+<li><strong>特点</strong>: 将问题分解为少量的大计算任务。每个任务包含较多的计算量，线程间的同步或通信频率相对较低。</li>
+<li><strong>优缺点</strong>: 同步和通信开销较小，通常更容易获得性能提升。但如果任务大小不一或任务数量少于核心数，可能难以实现良好的负载均衡，导致部分核心提前空闲。</li>
+<li><strong>示例</strong>: 将矩阵乘法任务按行或按块分配给不同线程，每个线程负责计算结果矩阵的一部分。讲义中提到“For shared-memory machines we need more coarse-grained parallelism”。</li>
+</ul>
+</li>
+<li><strong>选择</strong>: OpenMP 在共享内存系统中通常更倾向于利用中到粗粒度的并行，以减少由线程管理和同步带来的相对较高的开销。最佳粒度的选择依赖于具体的算法特性、数据大小和硬件平台。</li>
+</ul>
+<p><strong>矩阵划分策略 (Matrix Partitioning Strategies for Shared Memory)</strong>:</p>
+<p>在矩阵运算等任务中，合理地划分数据（通常是隐式地通过工作分配）以在线程间分配工作，并需要考虑数据局部性和负载均衡。讲义中讨论了输出矩阵C的划分方法，并给出了几种一维划分策略：</p>
+<ul>
+<li><strong>1D 块状 (1D Block Partitioning)</strong>: 将矩阵的行（或列）划分为若干连续的块，每个块分配给一个线程。例如，如果有P个线程，一个N行的矩阵可以被划分为P个大小约为N/P的行块。
+                        <img alt="1D Block Partitioning" src="https://picture-search.tiangong.cn/image/doc/f056f9450a4b997a8a3cd4067415dd91.jpg"/>
+<p class="caption">图3: 1D块状划分示意图。行被分为连续的块分配给线程 (来源: lecture04_2024)。</p>
+</li>
+<li><strong>1D 循环 (1D Cyclic Partitioning)</strong>: 将矩阵的行（或列）逐个地、循环地分配给线程。例如，行0给线程0，行1给线程1，...，行P给线程0，行P+1给线程1，以此类推。
+                        <p class="caption">讲义中对1D Cyclic Partitioning的描述: "rows are assigned to the threads one by one in a cyclic manner until all the rows are assigned." 这通常在负载不均时比块划分更有优势。</p>
+</li>
+<li><strong>1D 块循环 (1D Block Cyclic Partitioning)</strong>: 这是一种结合了块状和循环划分的策略。首先将矩阵的行（或列）划分为许多小的数据块（块的数量远大于线程数），然后将这些小块以循环的方式分配给线程。这种方式通常能在不规则问题中更好地平衡负载，同时保持一定的数据局部性。
+                        <img alt="1D Block Cyclic Partitioning" src="https://picture-search.tiangong.cn/image/doc/8cbfd807bdeb063536c94c836f4b68ba.jpg"/>
+<p class="caption">图4: 1D块循环划分示意图。行先分组为小块，再循环分配给线程 (来源: lecture04_2024)。</p>
+</li>
+</ul>
+<p><strong>负载均衡 (Load Balancing)</strong>:</p>
+<ul>
+<li><strong>定义</strong>: 在并行计算中，目标是尽可能均匀地将计算任务分配给所有参与计算的线程（或处理器），以确保所有线程大致同时完成它们的工作。这可以最小化处理器空闲时间，从而提高整体并行效率和加速比。</li>
+<li><strong>OpenMP 中的考虑</strong>: OpenMP 提供了多种机制来辅助实现负载均衡，特别是在循环并行化中。<code>schedule</code>子句（如<code>schedule(dynamic)</code>, <code>schedule(guided)</code>）允许在迭代计算时间不均匀的循环中动态地分配迭代任务给线程。对于非循环的并行任务，则需要开发者在设计并行算法时仔细考虑任务的分解和分配。</li>
+</ul>
+<h4>专业词语解释 (本节相关)</h4>
+<blockquote>
+<p><strong>并行粒度 (Parallel Granularity)</strong>: 并行任务的大小或范围，通常指单个子任务的计算量与它所需的通信/同步开销的比例。</p>
+<p><strong>细粒度并行 (Fine-grained Parallelism)</strong>: 将问题分解成大量非常小的并行任务。优点是并行度高，缺点是通信和同步开销可能较大。</p>
+<p><strong>粗粒度并行 (Coarse-grained Parallelism)</strong>: 将问题分解成少量较大的并行任务。优点是通信和同步开销相对较小，缺点是可能导致负载不均或并行度不足。</p>
+<p><strong>矩阵划分 (Matrix Partitioning)</strong>: 在并行计算中，将大矩阵分解为较小的子矩阵或数据块，并将这些块分配给不同的处理单元（线程或进程）进行计算的方法。</p>
+<p><strong>负载均衡 (Load Balancing)</strong>: 在并行计算系统中，确保各个处理器（或线程）的工作负载尽可能相等的一种策略，以减少空闲时间并提高整体性能。</p>
+</blockquote>
+</section>
+</section>
+<section id="openmp-core-elements">
+<h2>OpenMP 核心要素：指令、库函数与环境变量</h2>
+<p>OpenMP 的核心功能通过三种主要方式提供给开发者：编译器指令 (Pragmas)、运行时库函数 (Runtime Library Routines) 和环境变量 (Environment Variables)。这些共同构成了OpenMP的编程模型和执行环境。讲义中提到 "OpenMP is a directive-based Application Programming Interface (API)" 以及其组成部分 (<a href="https://www.openmp.org/wp-content/uploads/omp-hands-on-SC08.pdf" target="_blank">OpenMP Hands-on SC08 Slides</a>, 引用自讲义)。</p>
+<img alt="OpenMP Basic Solution Stack" src="https://picture-search.tiangong.cn/image/doc/3d6174bcc0e38f84c06f84416a29e5c5.jpg"/>
+<p class="caption">图5: OpenMP基础解决方案栈，展示了其组成部分 (来源: lecture04_2024)。</p>
+<section id="compiler-directives">
+<h3>编译器指令 (Compiler Directives - Pragmas)</h3>
+<p>编译器指令是 OpenMP 最主要的编程接口。在 C/C++ 中，它们以 <code>#pragma omp</code> 开头；在 Fortran 中，以 <code>!$OMP</code>, <code>C$OMP</code>, 或 <code>*$OMP</code> 开头。这些指令告诉编译器如何并行化代码段，并可以带有各种子句来细化行为。</p>
+<h4>并行区域构建指令 (Parallel Region Constructs)</h4>
+<ul>
+<li><strong><code>#pragma omp parallel [clause ...]</code></strong>:
+                        <ul>
+<li><strong>功能</strong>: 定义一个并行区域。当执行流遇到此指令时，主线程会创建一个线程团队（如果尚未创建或处于非活动状态），团队中的每个线程都会执行该并行区域内的结构化代码块。</li>
+<li><strong>常用子句</strong>:
+                                <ul>
+<li><code>if(scalar_expression)</code>: 条件并行。如果表达式的值为false，则并行区域将由主线程串行执行。</li>
+<li><code>num_threads(integer_expression)</code>: 指定该并行区域所使用的确切线程数量。</li>
+<li><code>private(list)</code>, <code>firstprivate(list)</code>, <code>shared(list)</code>: 指定列表中变量的数据共享属性。</li>
+<li><code>default(shared | none)</code>: 指定并行区域内变量的默认共享属性。<code>none</code> 要求程序员显式指定并行区域内所有变量的共享属性，有助于减少错误。</li>
+<li><code>reduction(operator:list)</code>: 对列表中的变量执行归约操作（如求和、求积、最大值、最小值等）。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4>任务共享指令 (Work-sharing Constructs)</h4>
+<p>这些指令用于在已创建的线程团队内部划分工作，它们本身不创建新线程，必须出现在一个活动的并行区域内，并由团队中的所有线程遇到（或都未遇到）。</p>
+<img alt="Work-sharing for Directive Concept" src="https://picture-search.tiangong.cn/image/doc/bd5e973b4fd58718ae68085fa9fa1b07.jpg"/>
+<p class="caption">图6: Work-sharing `for` 指令概念图，将循环迭代分配给线程 (来源: lecture04_2024)。</p>
+<ul>
+<li><strong><code>#pragma omp for [clause ...]</code></strong>:
+                        <ul>
+<li><strong>功能</strong>: 用于并行化紧随其后的<code>for</code>循环。循环的迭代将被分配给团队中的线程并行执行。</li>
+<li><strong>常用子句</strong>:
+                                <ul>
+<li><code>private(list)</code>, <code>firstprivate(list)</code>, <code>lastprivate(list)</code>: 控制循环变量和相关变量的作用域。</li>
+<li><code>reduction(operator:list)</code>: 对循环内的累积变量进行归约。</li>
+<li><code>schedule(kind [, chunk_size])</code>: 控制循环迭代如何分配给线程。
+                                        <ul>
+<li><code>static</code>: 在执行前将迭代静态地划分为大小为<code>chunk_size</code>的块，并循环分配给线程。若无<code>chunk_size</code>，则迭代空间大致均分给各线程。</li>
+<li><code>dynamic</code>: 迭代块在运行时动态分配。线程完成一个块后请求下一个。适合迭代计算时间不均匀的情况。</li>
+<li><code>guided</code>: 动态分配，但块的大小会逐渐减小到一个最小值（由<code>chunk_size</code>指定，若无则为1）。这试图在初始阶段分配较大块以减少开销，后续阶段分配较小块以改善负载均衡。</li>
+<li><code>auto</code>: 编译器或运行时系统根据启发式规则自动选择调度策略。</li>
+<li><code>runtime</code>: 调度策略和块大小由环境变量<code>OMP_SCHEDULE</code>在程序运行时决定。</li>
+</ul>
+<img alt="Loop Scheduling Example" src="https://picture-search.tiangong.cn/image/doc/6a270fbdd55f956843e68c91d96cc698.jpg"/>
+<p class="caption">图7: `schedule(static, chunk)` 示例，按块大小静态分配迭代 (来源: lecture04_2024)。</p>
+</li>
+<li><code>collapse(n)</code>: 将后面紧跟的 n 层完美嵌套循环视为单个大循环进行划分和并行化。</li>
+<li><code>ordered</code>: 表明循环中包含需要按迭代顺序执行的部分（与<code>#pragma omp ordered</code>区域配合使用）。</li>
+<li><code>nowait</code>: 取消循环末尾的隐式壁垒。如果后续代码不依赖此循环的全部完成，使用此子句可以提高性能。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong><code>#pragma omp sections [clause ...]</code></strong>:
+                        <ul>
+<li><strong>功能</strong>: 将不同的结构化代码块（由<code>#pragma omp section</code>定义）分配给团队中的不同线程执行。每个<code>section</code>块由一个线程执行一次。</li>
+<li><strong>常用子句</strong>: <code>private</code>, <code>firstprivate</code>, <code>lastprivate</code>, <code>reduction</code>, <code>nowait</code>.</li>
+</ul>
+</li>
+<li><strong><code>#pragma omp single [clause ...]</code></strong>:
+                        <ul>
+<li><strong>功能</strong>: 指定一个代码块仅由团队中的一个线程（不一定是主线程，而是第一个遇到的线程）执行。其他线程将跳过此块。</li>
+<li><strong>常用子句</strong>: <code>private</code>, <code>firstprivate</code>, <code>copyprivate(list)</code> (用于将一个线程的私有变量值广播给团队中其他线程在对应构造中的私有变量), <code>nowait</code>.</li>
+</ul>
+</li>
+</ul>
+<h4>组合指令 (Combined Constructs)</h4>
+<ul>
+<li><strong><code>#pragma omp parallel for [clause ...]</code></strong>:
+                        <ul>
+<li><strong>功能</strong>: 这是<code>#pragma omp parallel</code>后紧跟一个<code>#pragma omp for</code>的常用简写形式。它定义一个并行区域，并将该区域内唯一的<code>for</code>循环并行化。等效于：
+                                <pre><code>
+#pragma omp parallel [clauses applicable to parallel]
+{
+    #pragma omp for [clauses applicable to for]
+    // for loop
+}</code></pre>
+</li>
+</ul>
+</li>
+<li><strong><code>#pragma omp parallel sections [clause ...]</code></strong>: 类似地，是<code>#pragma omp parallel</code>后紧跟<code>#pragma omp sections</code>的简写。</li>
+</ul>
+<h4>同步指令 (Synchronization Constructs)</h4>
+<ul>
+<li><strong><code>#pragma omp barrier</code></strong>:
+                        <ul><li><strong>功能</strong>: 显式设置一个壁垒同步点。团队中的所有线程必须都执行到此指令处，然后才能有线程继续执行后续代码。</li></ul>
+</li>
+<li><strong><code>#pragma omp critical [ (name) ]</code></strong>:
+                        <ul><li><strong>功能</strong>: 定义一个临界区。在任何时刻，团队中只有一个线程可以执行具有相同名称（如果提供了名称）的临界区代码。如果未提供名称，则所有未命名的临界区共享同一个隐式锁。用于保护对共享资源的互斥访问。</li></ul>
+</li>
+<li><strong><code>#pragma omp atomic [read | write | update | capture]</code></strong> (根据OpenMP规范可选子句):
+                        <ul><li><strong>功能</strong>: 确保对特定内存位置的简单更新操作（如<code>x++</code>, <code>x = x + expr</code>, <code>x = expr</code>, <code>v = x</code>）是原子的。通常比<code>critical</code>构造开销小，但功能更受限，仅适用于特定类型的表达式。</li></ul>
+</li>
+<li><strong><code>#pragma omp master</code></strong>:
+                        <ul><li><strong>功能</strong>: 指定一个代码块仅由团队中的主线程（线程号为0的线程）执行。其他线程跳过此块。末尾没有隐式壁垒。(注意：在较新的OpenMP规范中，推荐使用<code>single</code>并结合条件判断<code>omp_get_thread_num() == 0</code>，或者如果只是想让一个线程执行，<code>single</code>更通用。)</li></ul>
+</li>
+<li><strong><code>#pragma omp ordered</code></strong>:
+                        <ul><li><strong>功能</strong>: 用在带有<code>ordered</code>子句的<code>omp for</code>循环内部，定义一个结构化代码块。该代码块将按照循环迭代的原始顺序（串行顺序）执行。</li></ul>
+</li>
+<li><strong><code>#pragma omp flush [(list)]</code></strong> (高级特性):
+                        <ul><li><strong>功能</strong>: 确保线程本地内存视图与其他线程的内存视图（通过主内存）保持一致。它强制将线程对<code>list</code>中变量（如果提供列表）或所有共享变量（如果未提供列表）的修改从本地缓存写回内存，并从内存重新加载这些变量的最新值。用于实现更细粒度的内存一致性控制。</li></ul>
+</li>
+</ul>
+<h4>任务化指令 (Tasking Constructs)</h4>
+<p>用于实现不规则并行，例如递归算法、链表遍历或依赖驱动的任务执行。</p>
+<ul>
+<li><strong><code>#pragma omp task [clause ...]</code></strong>:
+                        <ul>
+<li><strong>功能</strong>: 定义一个显式的“任务单元”。该任务单元的代码和数据环境被封装起来，可以由团队中的任一线程在稍后的某个时间点异步执行。</li>
+<li><strong>常用子句</strong>: <code>if</code>, <code>private</code>, <code>firstprivate</code>, <code>shared</code>, <code>default</code>, <code>depend(type:list)</code> (定义任务间的依赖关系), <code>priority(value)</code>, <code>untied</code>.</li>
+</ul>
+</li>
+<li><strong><code>#pragma omp taskwait</code></strong>:
+                        <ul><li><strong>功能</strong>: 当前任务将暂停执行，直到其直接产生（即由当前任务的task区域创建）的所有子任务完成执行。</li></ul>
+</li>
+<li><strong><code>#pragma omp taskloop [clause ...]</code></strong> (OpenMP 4.5+):
+                        <ul><li><strong>功能</strong>: 类似于<code>omp for</code>，但将循环的迭代或迭代块创建为显式任务。提供了更灵活的循环并行化方式，尤其适用于不规则循环或需要与任务依赖结合的场景。</li></ul>
+</li>
+</ul>
+</section>
+<section id="runtime-library-routines">
+<h3>运行时库函数 (Runtime Library Routines)</h3>
+<p>OpenMP提供了一系列库函数，用于在运行时查询和控制并行执行环境。使用这些函数需要在C/C++代码中包含<code>&lt;omp.h&gt;</code>头文件。</p>
+<table>
+<thead>
+<tr>
+<th>函数名</th>
+<th>功能描述</th>
+<th>返回类型</th>
+<th>常用场景/说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>omp_set_num_threads(int num_threads)</code></td>
+<td>设置后续并行区域默认使用的线程数。</td>
+<td><code>void</code></td>
+<td>在并行区域外部调用。优先级低于<code>num_threads</code>子句。</td>
+</tr>
+<tr>
+<td><code>int omp_get_num_threads(void)</code></td>
+<td>获取当前并行团队中的线程数量。</td>
+<td><code>int</code></td>
+<td>在并行区域内部调用。若在串行区域调用，结果通常为1。</td>
+</tr>
+<tr>
+<td><code>int omp_get_max_threads(void)</code></td>
+<td>获取程序在没有显式设置<code>num_threads</code>子句的情况下，并行区域中可能创建或使用的最大线程数。</td>
+<td><code>int</code></td>
+<td>可用于动态分配与线程数相关的资源。</td>
+</tr>
+<tr>
+<td><code>int omp_get_thread_num(void)</code></td>
+<td>获取当前线程在团队中的ID（编号从0到<code>num_threads-1</code>，主线程通常为0）。</td>
+<td><code>int</code></td>
+<td>在并行区域内部调用。若在串行区域调用，结果通常为0。</td>
+</tr>
+<tr>
+<td><code>int omp_get_num_procs(void)</code></td>
+<td>获取系统可用的处理器（逻辑核心）数量。</td>
+<td><code>int</code></td>
+<td>可用于决定合适的线程数。</td>
+</tr>
+<tr>
+<td><code>int omp_in_parallel(void)</code></td>
+<td>判断当前代码是否在一个活动的、并行的并行区域内执行。</td>
+<td><code>int</code></td>
+<td>返回非0（true）表示在并行区域内，0（false）表示在串行区域。</td>
+</tr>
+<tr>
+<td><code>void omp_set_dynamic(int dynamic_threads)</code></td>
+<td>启用（非0）或禁用（0）线程数量的动态调整。</td>
+<td><code>void</code></td>
+<td>影响运行时库是否可以根据系统负载自动调整并行区域的线程数。</td>
+</tr>
+<tr>
+<td><code>int omp_get_dynamic(void)</code></td>
+<td>查询是否启用了动态线程调整。</td>
+<td><code>int</code></td>
+<td>返回非0表示启用。</td>
+</tr>
+<tr>
+<td><code>void omp_set_nested(int nested)</code></td>
+<td>启用（非0）或禁用（0）嵌套并行。</td>
+<td><code>void</code></td>
+<td>如果禁用，嵌套的并行区域将串行执行。</td>
+</tr>
+<tr>
+<td><code>int omp_get_nested(void)</code></td>
+<td>查询是否启用了嵌套并行。</td>
+<td><code>int</code></td>
+<td>返回非0表示启用。</td>
+</tr>
+<tr>
+<td><code>void omp_init_lock(omp_lock_t *lock)</code></td>
+<td>初始化一个简单锁（类型为<code>omp_lock_t</code>）。</td>
+<td><code>void</code></td>
+<td>在使用锁之前必须调用。</td>
+</tr>
+<tr>
+<td><code>void omp_destroy_lock(omp_lock_t *lock)</code></td>
+<td>销毁一个简单锁，释放其资源。</td>
+<td><code>void</code></td>
+<td>锁不再使用时调用。</td>
+</tr>
+<tr>
+<td><code>void omp_set_lock(omp_lock_t *lock)</code></td>
+<td>获取一个简单锁。如果锁已被其他线程持有，则当前线程阻塞等待直到获得锁。</td>
+<td><code>void</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>void omp_unset_lock(omp_lock_t *lock)</code></td>
+<td>释放一个简单锁。</td>
+<td><code>void</code></td>
+<td>必须由持有该锁的线程调用。</td>
+</tr>
+<tr>
+<td><code>int omp_test_lock(omp_lock_t *lock)</code></td>
+<td>尝试获取一个简单锁。如果成功获得锁，返回非0；如果锁已被占用，则立即返回0（非阻塞）。</td>
+<td><code>int</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>double omp_get_wtime(void)</code></td>
+<td>获取自过去某个固定时间点以来经过的墙上时钟时间（以秒为单位的高精度浮点数）。</td>
+<td><code>double</code></td>
+<td>用于性能计时。通常成对使用，通过两次调用的差值计算代码段的执行时间。</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="environment-variables">
+<h3>环境变量 (Environment Variables)</h3>
+<p>OpenMP 程序在运行时的行为还可以通过一系列环境变量来控制。这些变量通常在程序启动前在shell中设置。</p>
+<table>
+<thead>
+<tr>
+<th>环境变量名</th>
+<th>描述</th>
+<th>示例值</th>
+<th>讲义/核心相关性</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OMP_NUM_THREADS</code></td>
+<td>设置并行区域默认的线程数量。如果程序中使用了<code>omp_set_num_threads()</code>或<code>num_threads</code>子句，它们通常会覆盖此环境变量的值。</td>
+<td><code>4</code>, <code>8</code></td>
+<td>核心：直接控制并行度。讲义中提到 "setenv OMP_NUM_THREADS N".</td>
+</tr>
+<tr>
+<td><code>OMP_SCHEDULE</code></td>
+<td>设置带有<code>schedule(runtime)</code>子句的<code>omp for</code>循环的默认调度策略和可选的<code>chunk_size</code>。</td>
+<td><code>"static,5"</code>, <code>"dynamic"</code>, <code>"guided,10"</code></td>
+<td>核心：影响循环迭代的负载均衡。</td>
+</tr>
+<tr>
+<td><code>OMP_DYNAMIC</code></td>
+<td>控制运行时库是否可以动态调整并行区域的线程数（如果设置为<code>TRUE</code>或非0）。默认通常为<code>FALSE</code>。</td>
+<td><code>TRUE</code>, <code>FALSE</code></td>
+<td>相关：影响实际线程数。</td>
+</tr>
+<tr>
+<td><code>OMP_PROC_BIND</code></td>
+<td>(OpenMP 4.0+) 控制OpenMP线程如何绑定到处理器（物理核心或硬件线程）。可以帮助提高性能，尤其是在NUMA系统上。</td>
+<td><code>TRUE</code>, <code>FALSE</code>, <code>spread</code>, <code>close</code>, <code>master</code></td>
+<td>高级：性能调优。</td>
+</tr>
+<tr>
+<td><code>OMP_NESTED</code></td>
+<td>控制是否启用嵌套并行（一个并行区域内部再创建新的并行区域）。默认通常为<code>FALSE</code>，即嵌套并行区域串行执行。</td>
+<td><code>TRUE</code>, <code>FALSE</code></td>
+<td>相关：支持更复杂的并行模式。</td>
+</tr>
+<tr>
+<td><code>OMP_STACKSIZE</code></td>
+<td>设置并行线程（除主线程外）的栈大小。格式为<code>size[B|K|M|G]</code>。</td>
+<td><code>"10M"</code>, <code>"2048K"</code></td>
+<td>高级：避免栈溢出，尤其在深度递归或大局部数组时。</td>
+</tr>
+<tr>
+<td><code>OMP_WAIT_POLICY</code></td>
+<td>(OpenMP 3.1+) 控制线程在等待（如等待锁或在壁垒处同步）时的行为。<code>ACTIVE</code>表示忙等待（消耗CPU），<code>PASSIVE</code>表示线程可能睡眠（减少CPU消耗但有唤醒延迟）。</td>
+<td><code>ACTIVE</code>, <code>PASSIVE</code></td>
+<td>高级：性能与能耗权衡。</td>
+</tr>
+<tr>
+<td><code>OMP_DISPLAY_ENV</code></td>
+<td>如果设置为<code>TRUE</code>或<code>VERBOSE</code>，程序启动时将打印出OpenMP内部控制变量（ICVs）的当前值，包括由环境变量和API调用设置的值。</td>
+<td><code>TRUE</code>, <code>VERBOSE</code></td>
+<td>调试：帮助理解OpenMP运行时环境的配置。</td>
+</tr>
+</tbody>
+</table>
+<h4>专业词语解释 (本章相关)</h4>
+<blockquote>
+<p><strong>指令 (Directive/Pragma)</strong>: 一种给编译器的特殊指示，用于控制代码的编译和执行方式。在OpenMP中，C/C++使用<code>#pragma omp ...</code>，Fortran使用<code>!$OMP ...</code>。</p>
+<p><strong>子句 (Clause)</strong>: OpenMP指令的附加参数，用于进一步指定或修改指令的行为，例如<code>private(var)</code>, <code>num_threads(N)</code>, <code>schedule(static)</code>。</p>
+<p><strong>运行时库 (Runtime Library)</strong>: 一组在程序执行期间提供支持服务的函数集合。OpenMP库函数（如<code>omp_get_thread_num()</code>）属于此类，负责管理线程、同步等。</p>
+<p><strong>环境变量 (Environment Variable)</strong>: 在操作系统级别设置的，可以影响程序（包括OpenMP程序）运行时行为的具名变量。</p>
+<p><strong>临界区 (Critical Section)</strong>: 代码中的一段区域，通过同步机制（如OpenMP的<code>critical</code>指令）保证在任何时刻最多只能有一个线程执行它，以保护共享资源免受并发访问冲突。</p>
+<p><strong>原子操作 (Atomic Operation)</strong>: 一个不可中断的操作序列。从其他线程的角度看，原子操作要么完全执行完毕，要么根本没有执行，不存在中间状态。OpenMP的<code>atomic</code>指令用于实现对单个内存位置的简单原子更新。</p>
+</blockquote>
+</section>
+</section>
+<section id="openmp-practice-applications">
+<h2>OpenMP 实践与应用</h2>
+<p>理论学习之后，通过具体的编码实践能更好地理解OpenMP的应用。以下是一些基础示例，改编或启发自讲义内容。</p>
+<section id="example1-hello-world">
+<h3>实例一：并行版 "Hello World"</h3>
+<p><strong>问题背景</strong>: 让创建的多个线程分别打印带有自己线程ID的 "Hello World" 信息。这是学习任何并行API的入门程序。</p>
+<p><strong>核心思路</strong>: 创建一个并行区域，在区域内每个线程获取自己的线程ID并打印信息。同时，让主线程（通常是ID为0的线程）打印出总的线程数量。</p>
+<p><strong>实现步骤</strong>:</p>
+<ol>
+<li>包含 <code>&lt;omp.h&gt;</code> 头文件。</li>
+<li>使用 <code>#pragma omp parallel</code> 创建并行区域。</li>
+<li>在并行区域内，为每个线程声明私有变量 <code>tid</code> 来存储其线程ID。为了获取总线程数<code>nthreads</code>，它可以在主线程中获取并打印，或者主线程获取后通过某种方式共享（但简单起见，这里让主线程获取并打印）。</li>
+<li>调用 <code>omp_get_thread_num()</code> 获取当前线程ID。</li>
+<li>每个线程打印自己的 "Hello World" 信息。</li>
+<li>在主线程（<code>tid == 0</code>）中，调用 <code>omp_get_num_threads()</code> 获取当前团队的线程总数并打印。</li>
+</ol>
+<p><strong>代码实现 (C)</strong> (参考讲义 "Example: Hello World"):</p>
+<pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;omp.h&gt;
+
+int main() {
+    // 可以通过 omp_set_num_threads() 或环境变量 OMP_NUM_THREADS 设置线程数
+    // omp_set_num_threads(4); 
+
+    #pragma omp parallel // private(tid) is implicitly handled for tid declared inside.
+                         // If nthreads were used by all, it'd need care.
+    {
+        int tid = omp_get_thread_num();
+        printf("Hello World from thread = %d\n", tid);
+
+        // 只让主线程打印一次总线程数
+        if (tid == 0) {
+            int nthreads = omp_get_num_threads();
+            printf("Number of threads in the team = %d\n", nthreads);
+        }
+    } // 隐式壁垒：所有线程在此同步，然后工作线程结束，主线程继续
+
+    return 0;
+}
+                </code></pre>
+<p><strong>结果分析/注意事项</strong>:</p>
+<ul>
+<li>由于线程是并发执行的，"Hello World" 信息的打印顺序可能每次运行都不固定。</li>
+<li>变量 <code>tid</code> 在并行区域内声明，因此它对每个线程是私有的。</li>
+<li><code>omp_get_num_threads()</code> 返回当前并行团队中的线程数。</li>
+<li>主线程通常是线程ID为0的那个。</li>
+</ul>
+<img alt="Hello World OpenMP Output Example" src="https://picture-search.tiangong.cn/image/doc/c527ccdb6b2f996ce6c5cf7d4b266b4d.jpg"/>
+<p class="caption">图8: 一个可能的 "Hello World" OpenMP程序输出示例 (来源: lecture04_2024)。</p>
+</section>
+<section id="example2-vector-dot-product">
+<h3>实例二：循环并行化 - 向量点积计算</h3>
+<p><strong>问题背景</strong>: 计算两个长度为N的向量 A 和 B 的点积，即 sum = A[0]*B[0] + A[1]*B[1] + ... + A[N-1]*B[N-1]。</p>
+<p><strong>核心思路</strong>: 向量点积的计算主要是一个累加过程。这个累加可以通过并行化处理每个元素乘积的循环，并使用 <code>reduction</code> 子句来安全地合并各个线程计算的局部和，从而得到最终的总和。</p>
+<p><strong>实现步骤</strong>:</p>
+<ol>
+<li>初始化向量 A 和 B，以及用于存储最终点积结果的变量 <code>sum</code>。</li>
+<li>使用 <code>#pragma omp parallel for</code> 指令并行化负责计算 A[i]*B[i] 并累加到 <code>sum</code> 的循环。</li>
+<li>在指令中使用 <code>reduction(+:sum)</code> 子句。这会为每个线程创建一个 <code>sum</code> 的私有副本（初始化为0），每个线程将自己负责的 A[i]*B[i] 乘积累加到这个私有副本中。当所有线程完成循环后，OpenMP会自动将所有私有副本的值通过<code>+</code>操作符累加到原始的共享变量 <code>sum</code> 中。</li>
+<li>使用 <code>omp_get_wtime()</code> 记录并行计算部分开始和结束的时间，以评估性能。</li>
+</ol>
+<p><strong>代码实现 (C)</strong>:</p>
+<pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;omp.h&gt;
+
+#define N_DOT_PRODUCT 10000000 // 向量大小
+
+int main() {
+    double *a, *b;
+    double sum = 0.0;
+    int i;
+
+    a = (double*)malloc(N_DOT_PRODUCT * sizeof(double));
+    b = (double*)malloc(N_DOT_PRODUCT * sizeof(double));
+
+    if (a == NULL || b == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        return 1;
+    }
+
+    // 初始化向量
+    for (i = 0; i &lt; N_DOT_PRODUCT; i++) {
+        a[i] = (double)i * 0.01 + 1.0;
+        b[i] = (double)(N_DOT_PRODUCT - i) * 0.01 + 0.5;
+    }
+
+    double start_time = omp_get_wtime();
+
+    #pragma omp parallel for reduction(+:sum)
+    for (i = 0; i &lt; N_DOT_PRODUCT; i++) {
+        sum += a[i] * b[i];
+    }
+
+    double end_time = omp_get_wtime();
+
+    printf("Dot product sum = %f\n", sum);
+    printf("Time taken for parallel computation: %f seconds\n", end_time - start_time);
+
+    free(a);
+    free(b);
+
+    return 0;
+}
+                </code></pre>
+<div class="chart-container">
+<canvas id="dotProductPerformanceChart"></canvas>
+</div>
+<p class="caption">图9: 假设的向量点积计算性能对比图 (示例)。实际性能提升取决于问题规模、硬件和具体实现。</p>
+<script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const ctx = document.getElementById('dotProductPerformanceChart').getContext('2d');
+                        // 假设的性能数据 (秒)
+                        const serial_time = 0.8; // 假设串行时间
+                        const parallel_2threads_time = 0.45; // 假设2线程时间
+                        const parallel_4threads_time = 0.28; // 假设4线程时间
+                        const parallel_8threads_time = 0.20; // 假设8线程时间
+
+                        new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: ['串行执行', '并行 (2线程)', '并行 (4线程)', '并行 (8线程)'],
+                                datasets: [{
+                                    label: '执行时间 (秒)',
+                                    data: [serial_time, parallel_2threads_time, parallel_4threads_time, parallel_8threads_time],
+                                    backgroundColor: [
+                                        'rgba(255, 99, 132, 0.7)',
+                                        'rgba(54, 162, 235, 0.7)',
+                                        'rgba(255, 206, 86, 0.7)',
+                                        'rgba(75, 192, 192, 0.7)'
+                                    ],
+                                    borderColor: [
+                                        'rgba(255, 99, 132, 1)',
+                                        'rgba(54, 162, 235, 1)',
+                                        'rgba(255, 206, 86, 1)',
+                                        'rgba(75, 192, 192, 1)'
+                                    ],
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    title: {
+                                        display: true,
+                                        text: '向量点积计算性能对比 (假设数据)',
+                                        font: { size: 16 }
+                                    },
+                                    legend: {
+                                        position: 'top',
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        title: {
+                                            display: true,
+                                            text: '时间 (秒)'
+                                        }
+                                    },
+                                    x: {
+                                       title: {
+                                            display: true,
+                                            text: '执行方式'
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    });
+                </script>
+<p><strong>结果分析/注意事项</strong>:</p>
+<ul>
+<li><code>reduction(+:sum)</code> 子句是此并行化成功的关键。它避免了多个线程直接对共享变量 <code>sum</code> 进行写操作而可能引发的竞争条件，并确保了结果的正确性。</li>
+<li>循环迭代变量 <code>i</code> 在 <code>#pragma omp parallel for</code> 中默认会被视为私有（private），每个线程有其自己的 <code>i</code> 来控制它所执行的迭代部分。</li>
+<li>通过 <code>omp_get_wtime()</code> 获取的时间可以用来与纯串行版本（无OpenMP指令）的执行时间进行比较，以量化并行带来的性能提升。如上图所示的假设数据，通常线程数增加，执行时间会减少，但受限于Amdahl定律和并行开销。</li>
+</ul>
+</section>
+<section id="example3-matrix-multiplication">
+<h3>实例三：矩阵乘法并行化 (C = A * B)</h3>
+<p><strong>问题背景</strong>: 计算两个稠密矩阵 A (m x k) 和 B (k x n) 的乘积，得到结果矩阵 C (m x n)。矩阵乘法的定义为 C[i][j] = Σ (A[i][p] * B[p][j]) for p from 0 to k-1。</p>
+<p><strong>核心思路</strong>: 结果矩阵 C 的每个元素 C[i][j] 的计算是相互独立的 (Embarrassingly Parallel Problem)。这意味着计算 C[0][0] 与计算 C[0][1] 或 C[x][y] 之间没有数据依赖。因此，可以并行化计算C中元素的外层循环（通常是控制行索引 `i` 或列索引 `j` 的循环）。讲义中指出 "all output elements C<sub>ij</sub> can be computed concurrently"。并且 "For A (nxk), B (kxm) and C (nxm) ... Linear speedup is achievable".</p>
+<p><strong>实现步骤</strong>:</p>
+<ol>
+<li>初始化输入矩阵 A 和 B，以及用于存储结果的矩阵 C（通常初始化为0）。</li>
+<li>使用 <code>#pragma omp parallel for</code> 指令来并行化最外层的循环（例如，遍历结果矩阵C的行的循环，即索引 <code>i</code>）。</li>
+<li>在指令中声明必要的私有变量。通常，内层循环的索引（如 <code>j</code>, <code>p</code>）应该是私有的。用于累加C[i][j]的临时变量（如果使用的话）也应是私有的。在本例中，由于每个线程计算C矩阵的不同行（或分配到的行中的元素），<code>C[i][j]</code> 的写操作是针对不同内存位置的（只要<code>i</code>被正确分配），因此对 <code>C[i][j]</code> 的直接累加是安全的，无需<code>reduction</code>。</li>
+<li>(可选) 可以使用 <code>collapse(2)</code> 子句将最外两层循环（如 <code>i</code> 和 <code>j</code> 循环）合并为一个大的迭代空间进行并行化，这有时能为编译器提供更多优化机会或改善负载均衡，尤其是在循环次数较少时。</li>
+</ol>
+<p><strong>代码实现 (C)</strong> (灵感源自讲义中的矩阵向量乘法和矩阵乘法讨论):</p>
+<pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;omp.h&gt;
+
+// 定义矩阵维度
+#define M_DIM 512 // A的行数, C的行数
+#define K_DIM 512 // A的列数, B的行数
+#define N_DIM 512 // B的列数, C的列数
+
+// Helper for matrix allocation
+double** allocate_matrix(int rows, int cols) {
+    double** matrix = (double**)malloc(rows * sizeof(double*));
+    if (matrix == NULL) return NULL;
+    for (int i = 0; i &lt; rows; i++) {
+        matrix[i] = (double*)malloc(cols * sizeof(double));
+        if (matrix[i] == NULL) { /* Free previously allocated rows */ return NULL; }
+    }
+    return matrix;
+}
+
+void free_matrix(double** matrix, int rows) {
+    if (matrix == NULL) return;
+    for (int i = 0; i &lt; rows; i++) {
+        free(matrix[i]);
+    }
+    free(matrix);
+}
+
+int main() {
+    double **A, **B, **C;
+    int i, j, p; // Loop indices, p is used for the inner sum (k in formulas)
+
+    A = allocate_matrix(M_DIM, K_DIM);
+    B = allocate_matrix(K_DIM, N_DIM);
+    C = allocate_matrix(M_DIM, N_DIM);
+
+    if (A == NULL || B == NULL || C == NULL) {
+        fprintf(stderr, "Matrix memory allocation failed\n");
+        // Proper deallocation for partially allocated matrices would be needed here
+        return 1;
+    }
+
+    // 初始化矩阵 A 和 B (示例值)
+    #pragma omp parallel for private(j) // Parallelize initialization for fun
+    for (i = 0; i &lt; M_DIM; i++)
+        for (j = 0; j &lt; K_DIM; j++)
+            A[i][j] = (double)(i + j + 1) * 0.1;
+    
+    #pragma omp parallel for private(j)
+    for (i = 0; i &lt; K_DIM; i++)
+        for (j = 0; j &lt; N_DIM; j++)
+            B[i][j] = (double)(i - j + 1) * 0.1;
+    
+    // 初始化 C 为 0
+    #pragma omp parallel for private(j)
+    for (i = 0; i &lt; M_DIM; i++)
+        for (j = 0; j &lt; N_DIM; j++)
+            C[i][j] = 0.0;
+
+    double start_time = omp_get_wtime();
+
+    // 并行化最外层循环 (i)
+    // 子句: private(j,p) 确保内层循环变量私有
+    // shared(A,B,C) 明确指出矩阵数据是共享的 (这是默认行为，但显式写出更清晰)
+    // collapse(2) 可以用于并行化 i 和 j 两层循环，这里仅并行化 i
+    #pragma omp parallel for private(j, p) shared(A, B, C)
+    for (i = 0; i &lt; M_DIM; i++) {       // C_rows
+        for (j = 0; j &lt; N_DIM; j++) {   // C_cols
+            // C[i][j] 已经被初始化为0
+            for (p = 0; p &lt; K_DIM; p++) { // Inner product
+                C[i][j] += A[i][p] * B[p][j];
+            }
+        }
+    }
+
+    double end_time = omp_get_wtime();
+    printf("Matrix multiplication (C=A*B) for %dx%d * %dx%d matrices.\n", M_DIM, K_DIM, K_DIM, N_DIM);
+    printf("Parallel computation completed in %f seconds.\n", end_time - start_time);
+
+    // (验证结果: 例如打印C矩阵的某个元素或计算校验和)
+    // printf("C[0][0] = %f\n", C[0][0]);
+    // printf("C[%d][%d] = %f\n", M_DIM-1, N_DIM-1, C[M_DIM-1][N_DIM-1]);
+
+    free_matrix(A, M_DIM);
+    free_matrix(B, K_DIM);
+    free_matrix(C, M_DIM);
+
+    return 0;
+}
+                </code></pre>
+<p><strong>结果分析/注意事项</strong>:</p>
+<ul>
+<li>选择并行化最外层的<code>i</code>循环是一种常见且通常有效的策略，因为它为每个线程分配了计算结果矩阵C中若干行的工作。每个线程写入C的不同部分，避免了写冲突。</li>
+<li>内层循环变量<code>j</code>和<code>p</code>必须是私有的，因为它们在每个外层迭代（或每个线程的迭代块内）独立变化。OpenMP通常会自动处理在并行循环内部声明的变量或作为循环控制变量的私有化，但显式使用<code>private</code>子句更安全。</li>
+<li>矩阵<code>A</code>和<code>B</code>是只读共享的，矩阵<code>C</code>是共享写入的，但由于每个<code>i</code>（行）由一个线程（或部分线程）负责，<code>C[i][j]</code>的具体位置写入通常不会直接冲突。</li>
+<li><strong>数据局部性和缓存优化</strong>: 对于非常大的矩阵，简单的行并行化可能不是最优的。由于内存访问模式（A按行访问，B按列访问），可能会导致缓存未命中率较高。更高级的优化（如分块矩阵乘法，即将A、B、C都划分为小子块，然后对子块进行乘法）可以显著改善数据局部性，但这超出了简单OpenMP指令的范畴，需要算法层面的调整。OpenMP的<code>task</code>和<code>depend</code>子句可以用来实现某些复杂的分块算法。</li>
+<li>讲义中提到的问题：“For A (nxk), B (kxm) and C (nxm), and n or m is much smaller than the number of cores, but k is very large. How to design a parallel algorithm for this type of matrix multiplication?” 这暗示了当并行维度不足时，需要更复杂的策略，可能涉及对k维度的某种形式的并行化或重组，这可能需要处理部分和的归约。</li>
+</ul>
+</section>
+</section>
+<section id="compiling-running">
+<h2>编译与运行 OpenMP 程序</h2>
+<p>要成功编译和运行OpenMP程序，需要编译器支持OpenMP规范，并在编译时启用相应的选项。</p>
+<p><strong>编译器支持</strong>:</p>
+<ul>
+<li><strong>GCC/G++ (GNU Compiler Collection)</strong>: 使用 <code>-fopenmp</code> 编译和链接选项。</li>
+<li><strong>Clang/Clang++ (LLVM based)</strong>: 使用 <code>-fopenmp</code> 编译选项。根据系统和Clang版本，可能需要链接特定的OpenMP运行时库，例如 <code>-fopenmp=libomp</code> (LLVM的OpenMP库) 或系统提供的库。</li>
+<li><strong>Intel C/C++ Compiler (icc/icpc/icx)</strong>: 通常使用 <code>-qopenmp</code> (Linux/macOS) 或 <code>/Qopenmp</code> (Windows) 编译选项。</li>
+<li><strong>Microsoft Visual C++ Compiler (MSVC)</strong>: 在Visual Studio项目中，可以通过项目属性启用OpenMP支持，或者在命令行中使用 <code>/openmp</code> 编译选项。</li>
+</ul>
+<p><strong>简单编译命令示例</strong> (使用 GCC):</p>
+<pre><code class="language-bash">
+# 编译C程序
+gcc -fopenmp my_openmp_program.c -o my_openmp_program -lm
+
+# 编译C++程序
+g++ -fopenmp my_openmp_program.cpp -o my_openmp_program
+            </code></pre>
+<p><code>-lm</code> 标志用于链接数学库（如果程序中使用了如 <code>sqrt</code>, <code>sin</code> 等数学函数）。</p>
+<p><strong>运行与环境变量设置</strong>:</p>
+<ul>
+<li><strong>执行程序</strong>: 编译成功后，像普通程序一样运行可执行文件：
+                    <pre><code class="language-bash">
+./my_openmp_program
+                    </code></pre>
+</li>
+<li><strong>控制线程数</strong>:
+                    <ul>
+<li><strong>通过环境变量</strong>: 在运行程序前设置 <code>OMP_NUM_THREADS</code> 环境变量。这是最常用的方法之一。
+                            <pre><code class="language-bash">
+export OMP_NUM_THREADS=4  # 设置使用4个线程 (Bash/Sh/Zsh)
+./my_openmp_program
+
+# 或者在Windows CMD中:
+# set OMP_NUM_THREADS=4
+# my_openmp_program.exe
+                            </code></pre>
+</li>
+<li><strong>通过库函数</strong>: 在程序代码中使用 <code>omp_set_num_threads(int num_threads)</code> 函数。这会覆盖环境变量的设置，但优先级低于并行区域的 <code>num_threads(N)</code> 子句。</li>
+</ul>
+</li>
+</ul>
+<p><strong>基本调试提示</strong>:</p>
+<ul>
+<li><strong>从简单开始</strong>: 确保串行版本的代码是正确的，然后逐步引入OpenMP指令。</li>
+<li><strong>打印调试信息</strong>: 在并行区域内部署<code>printf</code>语句，打印线程ID (<code>omp_get_thread_num()</code>) 和其他关键变量的值，以观察程序的并行行为。注意，过多的打印会干扰性能并可能因缓冲区问题导致输出交错混乱。</li>
+<li><strong>检查数据作用域</strong>: 仔细检查共享变量和私有变量的声明。忘记将本应私有的变量声明为<code>private</code>是常见的错误来源，可能导致竞争条件。使用<code>default(none)</code>子句强制显式声明所有变量的作用域是一个好习惯。</li>
+<li><strong>小规模测试</strong>: 使用小数据集和少量线程进行初步测试，验证并行逻辑的正确性。</li>
+<li><strong>使用调试工具</strong>:
+                    <ul>
+<li>一些编译器（如GCC/Clang）支持线程相关的 sanitizer，例如 <code>-fsanitize=thread</code> (ThreadSanitizer, TSan)，可以帮助检测数据竞争和其他线程错误。但这会显著增加运行时开销。</li>
+<li>专门的并行调试器（如Intel Inspector, TotalView, DDT）或支持多线程调试的通用调试器（如GDB）可以帮助跟踪并行程序的执行。</li>
+</ul>
+</li>
+<li><strong>注意隐式壁垒</strong>: 了解哪些OpenMP构造末尾有隐式壁垒（如<code>parallel</code>, <code>for</code>, <code>sections</code>, <code>single</code>），哪些没有（或可以通过<code>nowait</code>移除）。不当的<code>nowait</code>使用可能导致数据依赖问题。</li>
+</ul>
+</section>
+<section id="learning-resources">
+<h2>学习资源与进阶路径</h2>
+<p>掌握OpenMP是一个持续学习的过程。以下是一些推荐的资源，可以帮助初学者入门并进阶：</p>
+<p><strong>官方文档与规范</strong>:</p>
+<ul>
+<li><strong>OpenMP Architecture Review Board (ARB) 官方网站</strong>: <a href="https://www.openmp.org/" target="_blank">www.openmp.org</a>
+<ul>
+<li>这是获取最新OpenMP规范、API文档（包括C/C++和Fortran的快查卡）、示例代码和教程的最权威来源。网站上通常有历代规范文档和最新版本的特性介绍。</li>
+<li>讲义中也多次引用此网站作为信息来源 (e.g., "openmp.org – Talks, examples, forums, etc")。</li>
+</ul>
+</li>
+</ul>
+<p><strong>推荐书籍与教程</strong>:</p>
+<ul>
+<li><strong>《Using OpenMP: Portable Shared Memory Parallel Programming》</strong> by Barbara Chapman, Gabriele Jost, and Ruud van der Pas (MIT Press). 这是一本经典的OpenMP教材，内容全面且深入，适合系统学习。</li>
+<li><strong>《Parallel Programming in C with MPI and OpenMP》</strong> by Michael J. Quinn (McGraw-Hill). 这本书结合了两种主流的并行编程模型，对于希望了解更广泛并行计算领域的读者很有价值。</li>
+<li><strong>LLNL (Lawrence Livermore National Laboratory) OpenMP Tutorial</strong>: <a href="https://hpc-tutorials.llnl.gov/openmp/" target="_blank">hpc-tutorials.llnl.gov/openmp/</a>. 这是一个广受好评的在线教程，内容组织良好，包含大量示例，适合初学者和有一定经验的开发者。讲义中也提及从LLNL获取了资料。</li>
+<li><strong>Intel Developer Zone - OpenMP*</strong>: Intel作为OpenMP规范的主要贡献者之一，其开发者网站上有大量关于OpenMP的文章、教程和性能优化技巧。(<a href="https://www.intel.com/content/www/us/en/developer/tools/oneapi/overview.html" target="_blank">Intel oneAPI Hpc Toolkit often features OpenMP</a>)</li>
+<li><strong>Cornell Virtual Workshop - OpenMP</strong>: <a href="https://cvw.cac.cornell.edu/OpenMP/" target="_blank">cvw.cac.cornell.edu/OpenMP/</a>. 讲义中提及的参考资料之一，提供教学材料。</li>
+</ul>
+<p><strong>在线课程与社区</strong>:</p>
+<ul>
+<li><strong>Coursera, edX, Udemy 等平台</strong>: 搜索相关的高性能计算或并行编程课程，其中很多会涵盖OpenMP。</li>
+<li><strong>Stack Overflow (OpenMP Tag)</strong>: <a href="https://stackoverflow.com/questions/tagged/openmp" target="_blank">stackoverflow.com/questions/tagged/openmp</a>. 遇到具体编程问题时，可以在此提问或查找已有的解决方案。</li>
+<li><strong>GitHub</strong>: 搜索OpenMP相关的项目和示例代码，可以学习他人的实践经验。</li>
+</ul>
+<p><strong>进阶学习建议</strong>:</p>
+<ul>
+<li><strong>深入理解高级OpenMP特性</strong>:
+                    <ul>
+<li><strong>任务并行 (Tasking)</strong>: 学习<code>#pragma omp task</code>, <code>#pragma omp taskloop</code>, <code>depend</code>子句等，用于处理不规则并行问题，如递归、图算法、动态任务生成等。</li>
+<li><strong>SIMD (Single Instruction, Multiple Data) 指令</strong>: 学习<code>#pragma omp simd</code>系列指令，指导编译器生成向量化代码，利用CPU的SIMD执行单元。</li>
+<li><strong>设备卸载 (Offloading)</strong>: 学习<code>#pragma omp target</code>系列指令，将计算任务卸载到加速器设备（如GPU）上执行 (这是OpenMP 4.0及以后版本的重要特性)。</li>
+<li><strong>线程亲和性 (Thread Affinity)</strong>: 了解如何通过环境变量（如<code>OMP_PROC_BIND</code>, <code>OMP_PLACES</code>）或API控制OpenMP线程到物理CPU核心的绑定，这对于NUMA架构下的性能优化非常重要。</li>
+<li><strong>内存管理与分配器</strong>: 了解OpenMP 5.0+中与内存管理相关的新特性，如<code>allocate</code>指令和<code>allocator</code>子句。</li>
+</ul>
+</li>
+<li><strong>性能分析与调优</strong>:
+                    <ul>
+<li>学习使用性能分析工具（Profilers），如Intel VTune Profiler, AMD uProf, Linux <code>perf</code>, Valgrind (Helgrind/DRD用于线程错误检测)。这些工具可以帮助识别程序中的性能瓶颈、热点代码、线程同步开销和数据竞争。</li>
+<li>理解Amdahl定律和Gustafson定律，合理设定并行化目标。</li>
+<li>关注负载均衡、减少同步开销、改善数据局部性是性能调优的关键方向。</li>
+</ul>
+</li>
+<li><strong>结合其他并行模型</strong>: 如果需要开发跨节点的分布式内存并行程序，可以学习MPI (Message Passing Interface)。OpenMP和MPI可以结合使用（混合编程模型），在每个节点内部使用OpenMP进行共享内存并行，在节点间使用MPI进行消息传递。</li>
+<li><strong>关注OpenMP规范的演进</strong>: OpenMP规范在不断发展，每个新版本（如5.0, 5.1, 5.2，以及未来的6.0）都会引入新的功能和改进。保持对最新规范的关注有助于利用最新的并行编程技术。</li>
+</ul>
+</section>
+<section id="summary">
+<h2>总结</h2>
+<div class="key-points-summary">
+<h4>核心要点回顾</h4>
+<p>OpenMP通过一套简洁易用的编译器指令、运行时库函数和环境变量，为共享内存并行编程提供了一个强大的抽象层。其核心概念和机制包括：</p>
+<ul>
+<li><strong>Fork-Join 执行模型</strong>: 程序从主线程开始，遇到并行区域时派生线程团队，并行执行后汇合。</li>
+<li><strong>并行区域 (<code>#pragma omp parallel</code>)</strong>: 定义代码块由线程团队并发执行。</li>
+<li><strong>任务共享构造 (Work-sharing Constructs)</strong>: 如 <code>#pragma omp for</code>, <code>#pragma omp sections</code>, <code>#pragma omp single</code>，用于在团队内部分配工作。</li>
+<li><strong>数据环境管理</strong>: 通过 <code>shared</code>, <code>private</code>, <code>firstprivate</code>, <code>lastprivate</code>, <code>reduction</code> 等子句精确控制变量在并行区域中的作用域和行为。</li>
+<li><strong>同步机制</strong>: 通过 <code>critical</code>, <code>atomic</code>, <code>barrier</code>, <code>ordered</code> 等指令协调线程间的执行和数据访问，避免竞争条件和保证正确性。</li>
+<li><strong>任务并行 (Tasking)</strong>: 使用 <code>task</code>, <code>taskloop</code> 等指令处理不规则和动态的并行任务。</li>
+</ul>
+</div>
+<p><strong>OpenMP 的优势与局限</strong>:</p>
+<ul>
+<li><strong>优势</strong>:
+                    <ul>
+<li><strong>易用性与简洁性</strong>: 相对于底层的线程库（如Pthreads或Windows Threads），OpenMP提供了更高层次的抽象。开发者可以通过在代码中插入指令（Pragmas）来快速并行化现有的串行代码，通常改动较小。</li>
+<li><strong>增量式并行化</strong>: 允许开发者逐步地将并行性引入到程序中，可以从最耗时的部分（如循环）开始优化，逐步扩展并行范围。</li>
+<li><strong>可移植性</strong>: OpenMP是一个广泛支持的开放标准，大部分主流的C/C++和Fortran编译器（GCC, Clang, Intel, MSVC, IBM XL等）都支持OpenMP，确保了代码在不同平台间的可移植性。</li>
+<li><strong>与原有代码兼容</strong>: OpenMP指令在不支持OpenMP的编译器或未启用OpenMP选项时，通常被视作注释（<code>#pragma</code>的特性），这意味着同一份代码可以编译为串行版本或并行版本。</li>
+<li><strong>支持多种并行模式</strong>: 从简单的数据并行（如循环并行化）到更复杂的任务并行和对SIMD、设备卸载的支持。</li>
+</ul>
+</li>
+<li><strong>局限</strong>:
+                    <ul>
+<li><strong>主要面向共享内存系统</strong>: OpenMP最初设计且主要优势在于共享内存并行。虽然OpenMP 4.0及以后版本引入了对加速器设备（如GPU）的卸载支持，但其核心模型仍基于共享内存。它不直接支持纯粹的分布式内存系统间的并行（尽管常与MPI结合用于混合模型）。</li>
+<li><strong>非完全自动并行</strong>: 开发者仍然需要识别代码中可以并行的部分，并正确地使用OpenMP指令和子句来表达这种并行性。编译器不能自动将任意串行代码完美地转换为高效的并行代码。</li>
+<li><strong>数据竞争和死锁的风险依然存在</strong>: 尽管OpenMP简化了并行编程，但如果开发者对共享数据的管理不当（例如，忘记保护对共享变量的并发写操作），仍然可能引入数据竞争、死锁等难以调试的并行错误。</li>
+<li><strong>并行开销</strong>: 线程的创建/销毁（或激活/挂起）、同步操作（如壁垒、临界区）以及任务调度等都会引入一定的运行时开销。对于粒度过细或者并行部分占比过小的任务，这些开销可能会超过并行带来的收益。</li>
+<li><strong>对复杂数据结构的并行化可能不直观</strong>: 对于如链表、树、图等复杂或不规则数据结构的并行处理，可能需要更复杂的OpenMP任务化策略，或者算法本身需要为并行进行重新设计。</li>
+</ul>
+</li>
+</ul>
+<p><strong>给初学者的最后寄语</strong>: OpenMP是踏入并行计算世界的一个极好的起点和强大工具。建议从理解其核心概念和简单的循环并行化示例开始，多动手实践，逐步尝试将OpenMP应用到自己的项目中。在追求性能提升的同时，务必将并行程序的<strong>正确性</strong>放在首位。利用好学习资源，不断探索更高级的特性和性能调优技巧，你将能更有效地驾驭现代多核处理器的强大计算能力，解决更具挑战性的问题。</p>
+</section>
+<section id="glossary">
+<h2>附录：专业词语汇编 (Glossary)</h2>
+<div class="glossary-term"><strong>Amdahl 定律 (Amdahl's Law)</strong>: 一个用于计算在固定工作负载情况下，当系统某一部分性能提升后，整个系统预期能获得的最大加速比的公式。它指出，加速比受限于程序中无法并行化的串行部分的比例。</div>
+<div class="glossary-term"><strong>API (Application Programming Interface)</strong>: 应用程序接口，是一组定义软件组件之间如何交互和通信的规则、协议和工具。</div>
+<div class="glossary-term"><strong>原子操作 (Atomic Operation)</strong>: 一个或一系列不可被中断的操作。从其他线程的角度来看，原子操作要么完整地执行完毕，要么根本没有执行，不存在部分完成的中间状态。</div>
+<div class="glossary-term"><strong>壁垒 (Barrier)</strong>: 一种同步机制，强制一个线程组中的所有线程都必须到达程序中的某一点，并且在该点等待，直到所有线程都到达后，它们才能继续执行。</div>
+<div class="glossary-term"><strong>缓存 (Cache)</strong>: 一种小容量但速度极快的存储器，用于临时存放CPU最近使用过或可能即将使用的数据和指令的副本，以减少对较慢主内存的访问延迟。</div>
+<div class="glossary-term"><strong>缓存效应 (Cache Effect)</strong>: CPU 缓存对程序性能的显著影响。数据若能从缓存中获取（缓存命中），访问速度远快于从主内存读取（缓存未命中），从而提升程序执行效率。</div>
+<div class="glossary-term"><strong>缓存一致性 (Cache Coherency)</strong>: 在拥有多个独立缓存的并行计算系统中（如多核处理器），确保对于任何共享数据，所有缓存中的副本在任何时刻都保持一致的机制。</div>
+<div class="glossary-term"><strong>子句 (Clause)</strong>: OpenMP指令的可选组成部分，用于修改或指定该指令的具体行为细节，例如<code>private(x)</code>, <code>reduction(+:sum)</code>, <code>schedule(dynamic)</code>。</div>
+<div class="glossary-term"><strong>竞争条件 (Race Condition)</strong>: 当多个线程并发地访问和修改同一个共享资源（如变量），并且最终的结果依赖于这些线程执行操作的无法预测的相对顺序时，所发生的不确定行为或错误。</div>
+<div class="glossary-term"><strong>粗粒度并行 (Coarse-grained Parallelism)</strong>: 将并行任务划分为相对较大、计算密集型的独立工作单元，这些单元之间的通信或同步需求较少。</div>
+<div class="glossary-term"><strong>数据依赖 (Data Dependency)</strong>: 程序中不同计算或语句之间的一种关系，其中一个计算的执行或结果依赖于另一个计算的完成或其产生的数据。例如，一次循环迭代使用了前一次迭代计算得到的值。</div>
+<div class="glossary-term"><strong>数据局部性 (Data Locality)</strong>: 程序在执行过程中访问内存地址时，在时间上（刚访问过的数据再次被访问）和空间上（物理位置邻近的数据被相继访问）的集中趋势。良好的数据局部性可以显著提高缓存利用率和程序性能。</div>
+<div class="glossary-term"><strong>数据作用域 (Data Scope / Data-sharing Attribute)</strong>: 在OpenMP中，指并行区域内变量的可见性和共享属性，如<code>shared</code>（共享）、<code>private</code>（私有）、<code>firstprivate</code>、<code>lastprivate</code>、<code>reduction</code>等。</div>
+<div class="glossary-term"><strong>死锁 (Deadlock)</strong>: 两个或更多并发进程或线程因相互等待对方所持有的资源而都无法继续执行，从而陷入一种永久性的阻塞状态。</div>
+<div class="glossary-term"><strong>动态划分/调度 (Dynamic Partitioning/Scheduling)</strong>: 在程序运行时动态地将工作任务（如循环迭代）分配给可用的线程。这通常用于处理任务计算量不确定或不均匀的情况，以实现更好的负载均衡。</div>
+<div class="glossary-term"><strong>环境变量 (Environment Variable)</strong>: 在操作系统级别设置的，可以影响程序（包括OpenMP程序）运行时行为的具名变量，例如<code>OMP_NUM_THREADS</code>控制线程数。</div>
+<div class="glossary-term"><strong>Fork-Join 模型 (Fork-Join Model)</strong>: OpenMP所采用的基本并行执行模型。程序开始时由一个主线程执行，当遇到并行构造时，主线程派生（fork）出一个线程团队并行执行任务，任务完成后线程团队汇合（join），控制权交还给主线程继续串行执行。</div>
+<div class="glossary-term"><strong>ILP (Instruction-Level Parallelism)</strong>: 指令级并行，指在单个处理器核心内部通过流水线、超标量等技术同时执行来自同一指令流的多条指令的能力。</div>
+<div class="glossary-term"><strong>静态划分/调度 (Static Partitioning/Scheduling)</strong>: 在编译时或程序运行开始前，根据已知的工作负载将任务（如循环迭代）固定地、预先地分配给各个线程。</div>
+<div class="glossary-term"><strong>临界区 (Critical Section)</strong>: 代码中的一段特定区域，通过同步机制（如OpenMP的<code>critical</code>指令）确保在任何时刻最多只能有一个线程进入并执行该区域内的代码，这是保护共享资源免受并发访问冲突的常用方法。</div>
+<div class="glossary-term"><strong>负载均衡 (Load Balancing)</strong>: 在并行计算系统中，将总的计算工作量尽可能均匀地分配给各个处理单元（线程或进程），以最大限度地提高资源利用率、减少空闲时间并提升整体性能的策略。</div>
+<div class="glossary-term"><strong>矩阵划分 (Matrix Partitioning)</strong>: 在并行处理矩阵运算时，将大矩阵分解为较小的子矩阵、行块、列块或元素块，以便于将这些数据块分配给不同的并行处理单元进行计算的技术。</div>
+<div class="glossary-term"><strong>内存层级 (Memory Hierarchy)</strong>: 计算机系统中由不同速度、容量和成本的存储设备（如寄存器、多级缓存、主内存、磁盘存储）构成的层级结构。访问速度通常随层级降低而减慢。</div>
+<div class="glossary-term"><strong>并行计算 (Parallel Computing)</strong>: 同时使用多个计算资源（如CPU核心、GPU、或多台计算机组成的集群）来协同解决单个计算密集型或数据密集型问题的技术。</div>
+<div class="glossary-term"><strong>并行区域 (Parallel Region)</strong>: 在OpenMP中，由<code>#pragma omp parallel</code>指令定义的结构化代码块，该代码块由一个线程团队中的所有线程并发执行。</div>
+<div class="glossary-term"><strong>并行粒度 (Parallel Granularity)</strong>: 指并行任务中单个子任务的计算量与该任务执行过程中所需的通信或同步开销的相对大小。分为细粒度、中粒度和粗粒度。</div>
+<div class="glossary-term"><strong>Pragma (编译指示/指令)</strong>: 一种特殊的编译器指令，在C/C++中以<code>#pragma</code>开头，用于向编译器提供额外信息或指示，例如OpenMP指令就是通过Pragma实现的。</div>
+<div class="glossary-term"><strong>共享内存 (Shared Memory)</strong>: 一种计算机体系结构（及编程模型），其中多个处理器或核心共享同一个物理地址空间，使得它们可以直接访问和修改内存中的相同数据。</div>
+<div class="glossary-term"><strong>SIMD (Single Instruction, Multiple Data)</strong>: 单指令多数据流，一种并行计算的执行模式，允许一条指令同时对多个数据元素执行相同的操作。现代CPU通常包含SIMD单元（如SSE, AVX指令集）。</div>
+<div class="glossary-term"><strong>细粒度并行 (Fine-grained Parallelism)</strong>: 将并行任务划分为非常小的、计算量不大的独立工作单元，这些单元之间可能需要较为频繁的交互或同步。</div>
+<div class="glossary-term"><strong>线程 (Thread)</strong>: 进程内的一个独立执行单元（或称轻量级进程），是操作系统进行运算调度的基本单位。同一进程的多个线程共享其父进程的地址空间和大部分资源。</div>
+<div class="glossary-term"><strong>同步 (Synchronization)</strong>: 在并发编程中，用于协调多个线程或进程的执行顺序和对共享资源的访问的各种机制，以确保数据的一致性和程序的正确性。</div>
+<div class="glossary-term"><strong>向量点积 (Vector Dot Product)</strong>: 线性代数中的一种基本运算，对于两个等长度的向量，将其对应位置的元素相乘，然后再将所有这些乘积相加，得到一个标量结果。</div>
+<div class="glossary-term"><strong>隐式壁垒 (Implied Barrier)</strong>: OpenMP在某些并行构造（例如<code>parallel</code>区域的末尾，或者没有<code>nowait</code>子句的<code>for</code>、<code>sections</code>、<code>single</code>构造的末尾）自动插入的同步点，要求团队中所有线程都到达该点后才能继续。</div>
+<div class="glossary-term"><strong>运行时库 (Runtime Library)</strong>: 程序在执行期间所依赖的一组预编译的函数和例程，它们提供了核心的操作系统服务、语言特性支持（如内存管理、I/O操作）以及像OpenMP那样的并行执行环境支持。</div>
+</section>
+<footer>
+<p>笔记最后更新时间: 2025-05-28</p>
+<p>内容根据悉尼大学并行编程实践课程讲义 (HUST-USYD Summer School on Parallel Programming Practice – Lecture 4 by Bing Bing Zhou) 及通用OpenMP知识整理。所有引用图片版权归原作者所有。</p>
+</footer>
+</div>
+</body>
+</html>
